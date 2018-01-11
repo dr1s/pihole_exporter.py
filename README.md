@@ -1,8 +1,6 @@
 # pihole_exporter
 A prometheus exporter for Pi-Hole written in Python 3.
 
-Authentication is not supported right now.
-To use this exporter password authentication must be disabled in Pi-Hole.
 
 # Table of Contents
 <!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
@@ -15,6 +13,7 @@ To use this exporter password authentication must be disabled in Pi-Hole.
 	- [pip](#pip)
 	- [manual](#manual)
 - [Usage](#usage)
+	- [Authentication](#authentication)
 - [Prometheus config](#prometheus-config)
 - [Grafana dashboard](#grafana-dashboard)
 
@@ -86,10 +85,20 @@ Some metrics have been redacted.
 # Usage
     pihole_exporter --pihole localhost:80 --interface 0.0.0.0 --port 9311
 
-
 The previous used arguements are the default options. If nothing needs to be changed, pihole_exporter can be started without arguments.
 
-    pihole_exporter
+	pihole_exporter
+
+## Authentication
+To use pihole_exporter with authentication enabled, get the hashed password from setupVars.conf
+
+	$ grep WEBPASSWORD /etc/pihole/setupVars.conf
+	WEBPASSWORD=da1a51f575cd740be233d22548ecac1dbcc96ffa297283a6a204f9213a8aca71
+
+Use this hash as the argument for `--auth`
+
+	pihole_exporter --auth da1a51f575cd740be233d22548ecac1dbcc96ffa297283a6a204f9213a8aca71
+
 
 
 # Prometheus config

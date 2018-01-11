@@ -17,6 +17,7 @@ summary_raw_url = None
 top_item_url = None
 top_sources_url = None
 query_types_url = None
+forward_destinations_url = None
 
 def get_json(url):
     response = urllib.request.urlopen(url)
@@ -29,10 +30,8 @@ def get_json(url):
 def get_summary(url):
     summary_raw = get_json(summary_raw_url)
     summary = "pihole_exporter_version %s\n" % (version)
-    print(summary)
     for i in summary_raw:
         if i != "status":
-            print("pihole_%s %s" % (i, summary_raw[i]))
             summary += "pihole_%s %s\n" % (i, summary_raw[i])
         elif summary_raw[i] == 'enabled':
             summary += "pihole_status 1"
@@ -44,7 +43,6 @@ def get_summary(url):
 def convert_json(json_data, name, option):
     items = str()
     for i in json_data:
-        print("pihole_%s{%s=\"%s\"} %s" % (name, option, i, json_data[i]))
         items += "pihole_%s{%s=\"%s\"} %s\n" % (name, option, i, json_data[i])
     return items
 

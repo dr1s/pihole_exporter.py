@@ -82,7 +82,7 @@ Some metrics have been redacted.
     cd pihole_exporter.py
     pip3 install -r requirements.txt
     cd src
-    ./pihole_exporter
+    ./pihole_exporter.py
 # Usage
     pihole_exporter --pihole localhost:80 --interface 0.0.0.0 --port 9311
 

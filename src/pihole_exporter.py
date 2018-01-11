@@ -34,9 +34,9 @@ def get_summary(url):
         if i != "status":
             summary += "pihole_%s %s\n" % (i, summary_raw[i])
         elif summary_raw[i] == 'enabled':
-            summary += "pihole_status 1"
+            summary += "pihole_status 1\n"
         else:
-            summary += "pihole_status 0"
+            summary += "pihole_status 0\n"
 
     return summary
 

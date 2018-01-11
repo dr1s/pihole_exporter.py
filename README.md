@@ -13,6 +13,7 @@ A prometheus exporter for Pi-Hole written in Python 3.
 	- [pip](#pip)
 	- [manual](#manual)
 - [Usage](#usage)
+	- [Example](#example)
 	- [Authentication](#authentication)
 - [Prometheus config](#prometheus-config)
 - [Grafana dashboard](#grafana-dashboard)
@@ -83,6 +84,20 @@ Some metrics have been redacted.
     cd src
     ./pihole_exporter.py
 # Usage
+		usage: pihole_exporter.py [-h] [-o PIHOLE] [-p PORT] [-i INTERFACE] [-a AUTH]
+
+		pihole_exporter
+
+		optional arguments:
+		-h, --help            show this help message and exit
+		-o PIHOLE, --pihole PIHOLE
+												pihole adress
+		-p PORT, --port PORT  port pihole_exporter is listening on
+		-i INTERFACE, --interface INTERFACE
+												interface pihole_exporter will listen on
+		-a AUTH, --auth AUTH  Pihole password hash
+## Example
+
     pihole_exporter --pihole localhost:80 --interface 0.0.0.0 --port 9311
 
 The previous used arguements are the default options. If nothing needs to be changed, pihole_exporter can be started without arguments.
@@ -98,7 +113,6 @@ To use pihole_exporter with authentication enabled, get the hashed password from
 Use this hash as the argument for `--auth`
 
 	pihole_exporter --auth da1a51f575cd740be233d22548ecac1dbcc96ffa297283a6a204f9213a8aca71
-
 
 
 # Prometheus config

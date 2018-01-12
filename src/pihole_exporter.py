@@ -54,19 +54,25 @@ def metrics():
     items = get_summary(summary_raw_url)
 
     top_items = get_json(top_item_url)
-    top_queries = top_items['top_queries']
-    items += convert_json(top_queries, 'top_queries', 'domain')
-    top_ads = top_items['top_ads']
-    items += convert_json(top_ads, 'top_ads', 'domain')
+    if top_items:
+        top_queries = top_items['top_queries']
+        items += convert_json(top_queries, 'top_queries', 'domain')
+        top_ads = top_items['top_ads']
+        items += convert_json(top_ads, 'top_ads', 'domain')
 
-    top_sources = get_json(top_sources_url)['top_sources']
-    items += convert_json(top_sources, 'top_sources', 'client')
+    top_sources = get_json(top_sources_url)
+    if top_sources:
+        items += convert_json(top_sources['top_sources'],
+            'top_sources', 'client')
 
-    fw_dest = get_json(forward_destinations_url)['forward_destinations']
-    items += convert_json(fw_dest, 'forward_destinations', 'resolver')
+    fw_dest = get_json(forward_destinations_url)
+    if fw_dest:
+        items += convert_json(fw_dest['forward_destinations'],
+            'forward_destinations', 'resolver')
 
-    qt = get_json(query_types_url)['querytypes']
-    items += convert_json(qt, 'query_type', 'type')
+    qt = get_json(query_types_url)
+    if qt:
+        items += convert_json(qt['querytypes'], 'query_type', 'type')
 
     return Response(items, mimetype="text/plain")
 

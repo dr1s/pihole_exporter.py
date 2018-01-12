@@ -8,12 +8,12 @@ A prometheus exporter for Pi-Hole written in Python 3.
 - [pihole_exporter](#piholeexporter)
 - [Table of Contents](#table-of-contents)
 - [Available metrics](#available-metrics)
-	- [Example](#example)
+	- [Metrics Example](#metrics-example)
 - [Setup](#setup)
 	- [pip](#pip)
 	- [manual](#manual)
 - [Usage](#usage)
-	- [Example](#example)
+	- [Usage Example](#usage-example)
 	- [Authentication](#authentication)
 - [Prometheus config](#prometheus-config)
 - [Grafana dashboard](#grafana-dashboard)
@@ -36,7 +36,7 @@ A prometheus exporter for Pi-Hole written in Python 3.
 * Forward destinations
 * Query type
 
-## Example
+## Metrics Example
 Some metrics have been redacted.
 
     pihole_exporter_version 0.1
@@ -96,7 +96,7 @@ Some metrics have been redacted.
 	-i INTERFACE, --interface INTERFACE
 									interface pihole_exporter will listen on
 	-a AUTH, --auth AUTH  Pihole password hash
-## Example
+## Usage Example
 
     pihole_exporter --pihole localhost:80 --interface 0.0.0.0 --port 9311
 

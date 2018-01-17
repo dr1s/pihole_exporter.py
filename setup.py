@@ -10,5 +10,5 @@ setup(
     install_requires=["Flask"],
     packages=find_packages(),
     include_package_data = True,
-    entry_points={'console_scripts': ['pihole_exporter=src.pihole_exporter:main']},
+    entry_points={'console_scripts': ['pihole_exporter=pihole_exporter.pihole_exporter:main']},
 )

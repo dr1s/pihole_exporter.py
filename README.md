@@ -75,14 +75,17 @@ Some metrics have been redacted.
     pihole_query_type{type="AAAA (IPv6)"} 37.72
 
 # Setup
+
 ## pip
     pip3 --upgrade install git+https://github.com/dr1s/pihole_exporter.py.git
+
 ## manual
     git clone https://github.com/dr1s/pihole_exporter.py.git
     cd pihole_exporter.py
     pip3 install -r requirements.txt
     cd src
     ./pihole_exporter.py
+
 # Usage
 	usage: pihole_exporter.py [-h] [-o PIHOLE] [-p PORT] [-i INTERFACE] [-a AUTH]
 
@@ -96,6 +99,7 @@ Some metrics have been redacted.
 	-i INTERFACE, --interface INTERFACE
 									interface pihole_exporter will listen on
 	-a AUTH, --auth AUTH  Pihole password hash
+	
 ## Usage Example
 
     pihole_exporter --pihole localhost:80 --interface 0.0.0.0 --port 9311

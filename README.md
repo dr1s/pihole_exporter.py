@@ -77,7 +77,7 @@ Some metrics have been redacted.
 # Setup
 
 ## pip
-    pip3 --upgrade install git+https://github.com/dr1s/pihole_exporter.py.git
+    pip3 install --upgrade git+https://github.com/dr1s/pihole_exporter.py.git
 
 ## manual
     git clone https://github.com/dr1s/pihole_exporter.py.git

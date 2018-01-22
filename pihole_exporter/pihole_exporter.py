@@ -84,7 +84,7 @@ def main():
     parser.add_argument('-o', '--pihole',
         help='pihole adress',
         default='localhost:80')
-    parser.add_argument('-p', '--port',
+    parser.add_argument('-p', '--port', type=int,
         help='port pihole_exporter is listening on',
         default=9311)
     parser.add_argument('-i', '--interface',

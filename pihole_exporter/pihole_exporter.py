@@ -3,6 +3,7 @@
 import json
 import argparse
 import urllib.request
+import logging
 
 from io import StringIO
 from flask import Flask
@@ -103,6 +104,11 @@ def main():
     global api_url
     api_url = url + '/admin/api.php'
 
+    # Disable werkzeug logging to avoid syslog spam
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+
+    print("* Listening on %s:%s" % (interface, port))
     app.run(host=interface, port=port)
 
 

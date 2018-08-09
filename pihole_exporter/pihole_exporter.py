@@ -30,12 +30,16 @@ def get_summary(url):
     summary_raw = get_json(url)
     summary = "pihole_exporter_version %s\n" % (version)
     for i in summary_raw:
-        if i != "status":
-            summary += "pihole_%s %s\n" % (i, summary_raw[i])
-        elif summary_raw[i] == 'enabled':
-            summary += "pihole_status 1\n"
+        if i == "status":
+            if summary_raw[i] == 'enabled':
+                summary += "pihole_status 1\n"
+            else:
+                summary += "pihole_status 0\n"
+        elif i == "gravity_last_updated":
+        #the relative time can be calculated
+            summary += "pihole_%s %s\n" % (i, summary_raw[i]['absolute'])
         else:
-            summary += "pihole_status 0\n"
+            summary += "pihole_%s %s\n" % (i.lower(), summary_raw[i])
 
     return summary
 

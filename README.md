@@ -35,44 +35,62 @@ A prometheus exporter for Pi-Hole written in Python 3.
 * Top clients
 * Forward destinations
 * Query type
+* Reply type
 
 ## Metrics Example
 Some metrics have been redacted.
 
-    pihole_exporter_version 0.1
-    pihole_queries_forwarded 6447
-    pihole_domains_being_blocked 717100
-    pihole_ads_percentage_today 2.697061
-    pihole_ads_blocked_today 646
-    pihole_dns_queries_today 23952
-    pihole_clients_ever_seen 10
-    pihole_unique_clients 9
-    pihole_queries_cached 16799
-    pihole_unique_domains 1211
-    pihole_top_queries{domain="google.com"} 13739
-    pihole_top_queries{domain="grafana.com"} 292
-    pihole_top_queries{domain="www.google.com"} 221
-    pihole_top_queries{domain="raw.githubusercontent.com"} 294
-    pihole_top_ads{domain="brahe.apptimize.com"} 11
-    pihole_top_ads{domain="app-measurement.com"} 65
-    pihole_top_ads{domain="e.reddit.com"} 21
-    pihole_top_ads{domain="s.youtube.com"} 37
-    pihole_top_ads{domain="api-analytics.metaps.com"} 18
-    pihole_top_ads{domain="www.googletagservices.com"} 8
-    pihole_top_ads{domain="www.google-analytics.com"} 11
-    pihole_top_ads{domain="device-metrics-us.amazon.com"} 197
-    pihole_top_ads{domain="rpc-php.trafficfactory.biz"} 27
-    pihole_top_ads{domain="e.crashlytics.com"} 76
-    pihole_top_sources{client="192.168.0.105"} 25
-    pihole_top_sources{client="192.168.0.112"} 167
-    pihole_top_sources{client="192.168.0.106"} 740
-    pihole_top_sources{client="192.168.0.100"} 1502
-    pihole_top_sources{client="localhost|127.0.0.1"} 1713
-    pihole_forward_destinations{resolver="google-public-dns-a.google.com|8.8.8.8"} 12.23
-    pihole_forward_destinations{resolver="local|::1"} 73.02
-    pihole_forward_destinations{resolver="google-public-dns-b.google.com|8.8.4.4"} 14.75
-    pihole_query_type{type="A (IPv4)"} 62.28
-    pihole_query_type{type="AAAA (IPv6)"} 37.72
+	pihole_exporter_version 0.1
+	pihole_domains_being_blocked 573713
+	pihole_dns_queries_today 13961
+	pihole_ads_blocked_today 3443
+	pihole_ads_percentage_today 24.661556
+	pihole_unique_domains 983
+	pihole_queries_forwarded 4346
+	pihole_queries_cached 3288
+	pihole_clients_ever_seen 9
+	pihole_unique_clients 5
+	pihole_dns_queries_all_types 13974
+	pihole_reply_nodata 34
+	pihole_reply_nxdomain 0
+	pihole_reply_cname 37
+	pihole_reply_ip 88
+	pihole_status 1
+	pihole_gravity_last_updated 1533820315
+	pihole_top_queries{domain="raw.githubusercontent.com"} 321
+	pihole_top_queries{domain="grafana.com"} 292
+	pihole_top_queries{domain="connect.rom.miui.com"} 165
+	pihole_top_queries{domain="spectrum.s3.amazonaws.com"} 145
+	pihole_top_queries{domain="mtalk.google.com"} 124
+	pihole_top_queries{domain="www.cdn.viber.com"} 112
+	pihole_top_queries{domain="redirector.googlevideo.com"} 112
+	pihole_top_queries{domain="ntp-g7g.amazon.com"} 98
+	pihole_top_queries{domain="www.google.com"} 72
+	pihole_top_ads{domain="mobile.pipe.aria.microsoft.com"} 872
+	pihole_top_ads{domain="www.googleadservices.com"} 169
+	pihole_top_ads{domain="www.google-analytics.com"} 147
+	pihole_top_ads{domain="s.youtube.com"} 133
+	pihole_top_ads{domain="data.mistat.intl.xiaomi.com"} 114
+	pihole_top_ads{domain="api.brs.intl.miui.com"} 89
+	pihole_top_ads{domain="device-metrics-us.amazon.com"} 88
+	pihole_top_ads{domain="adservice.google.com"} 75
+	pihole_top_ads{domain="aax-eu.amazon-adsystem.com"} 73
+	pihole_top_ads{domain="sb.scorecardresearch.com"} 71
+	pihole_top_sources{client="192.168.1.10"} 2833
+	pihole_top_sources{client="192.168.1.2"} 2799
+	pihole_top_sources{client="192.168.1.1"} 1045
+	pihole_top_sources{client="192.168.1.7"} 332
+	pihole_top_sources{client="192.168.1.5"} 277
+	pihole_forward_destinations{resolver="blocklist|blocklist"} 31.08
+	pihole_forward_destinations{resolver="cache|cache"} 29.68
+	pihole_forward_destinations{resolver="1dot1dot1dot1.cloudflare-dns.com|1.1.1.1"} 39.23
+	pihole_query_type{type="A (IPv4)"} 76.53
+	pihole_query_type{type="AAAA (IPv6)"} 23.38
+	pihole_query_type{type="ANY"} 0
+	pihole_query_type{type="SRV"} 0
+	pihole_query_type{type="SOA"} 0
+	pihole_query_type{type="PTR"} 0.09
+	pihole_query_type{type="TXT"} 0
 
 # Setup
 
@@ -83,7 +101,7 @@ Some metrics have been redacted.
     git clone https://github.com/dr1s/pihole_exporter.py.git
     cd pihole_exporter.py
     pip3 install -r requirements.txt
-    cd src
+    cd pihole_exporter
     ./pihole_exporter.py
 
 # Usage
@@ -99,7 +117,7 @@ Some metrics have been redacted.
 	-i INTERFACE, --interface INTERFACE
 									interface pihole_exporter will listen on
 	-a AUTH, --auth AUTH  Pihole password hash
-	
+
 ## Usage Example
 
     pihole_exporter --pihole localhost:80 --interface 0.0.0.0 --port 9311

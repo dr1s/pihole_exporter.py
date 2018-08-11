@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pihole_exporter',
-    version='0.2.dev0',
+    version='0.2',
     url='https://github.com/dr1s/pihole_exporter.py',
     author='dr1s',
     license='MIT',

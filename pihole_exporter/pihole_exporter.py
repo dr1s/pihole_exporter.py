@@ -25,7 +25,6 @@ class pihole_exporter:
         self.auth = auth
         self.api_url = 'http://%s/admin/api.php' % self.url
         self.metrics = dict()
-        self.app = self.make_prometheus_app()
         self.httpd = None
 
         self.summary_raw_url = self.api_url + '?summaryRaw'
@@ -112,7 +111,7 @@ class pihole_exporter:
         print("* Listening on %s:%s" % (interface, port))
         self.httpd = make_server(   interface,
                                     port,
-                                    self.app,
+                                    self.make_prometheus_app(),
                                     handler_class=self._SilentHandler)
         t = threading.Thread(target=self.httpd.serve_forever)
         t.start()

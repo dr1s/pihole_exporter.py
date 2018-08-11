@@ -12,6 +12,7 @@ A prometheus exporter for Pi-Hole written in Python 3.
 - [Setup](#setup)
 	- [pip](#pip)
 	- [manual](#manual)
+	- [Docker](#docker)
 - [Usage](#usage)
 	- [Usage Example](#usage-example)
 	- [Authentication](#authentication)
@@ -103,6 +104,12 @@ Some metrics have been redacted.
     pip3 install -r requirements.txt
     cd pihole_exporter
     ./pihole_exporter.py
+
+## Docker
+    git clone https://github.com/dr1s/pihole_exporter.py.git
+    docker build -t pihole_exporter .
+    edit $AUTH_KEY and $IP in docker-compose.yml
+    docker-compose up
 
 # Usage
 	usage: pihole_exporter.py [-h] [-o PIHOLE] [-p PORT] [-i INTERFACE] [-a AUTH]

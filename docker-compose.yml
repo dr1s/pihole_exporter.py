@@ -1,0 +1,7 @@
+version: '2'
+services:
+  pihole_exporter:
+    image: pihole_exporter:latest
+    ports:
+      - 9311:9311
+    command: --auth $AUTH_KEY  --pihole $IP

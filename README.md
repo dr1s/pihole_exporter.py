@@ -1,25 +1,26 @@
 # pihole_exporter
-A prometheus exporter for Pi-Hole written in Python 3.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/363a7755d05b4d17beb6ed643850518f)](https://www.codacy.com/project/dr1s/pihole_exporter.py/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dr1s/pihole_exporter.py&amp;utm_campaign=Badge_Grade_Dashboard)
+[![Docker Automated build](https://img.shields.io/docker/automated/dr1s/pihole_exporter.svg)](https://img.shields.io/docker/automated/dr1s/pihole_exporter.svg)
 
+A prometheus exporter for PiHole written in Python 3.
 
-# Table of Contents
-<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [pihole_exporter](#piholeexporter)
-- [Table of Contents](#table-of-contents)
 - [Available metrics](#available-metrics)
 	- [Metrics Example](#metrics-example)
 - [Setup](#setup)
 	- [pip](#pip)
 	- [manual](#manual)
 	- [Docker](#docker)
+		- [docker-hub](#docker-hub)
+		- [manual](#manual)
 - [Usage](#usage)
 	- [Usage Example](#usage-example)
 	- [Authentication](#authentication)
 - [Prometheus config](#prometheus-config)
 - [Grafana dashboard](#grafana-dashboard)
 
-<!-- /TOC -->
 
 # Available metrics
 * Queries forwarded (24h)
@@ -106,6 +107,14 @@ Some metrics have been redacted.
     ./pihole_exporter.py
 
 ## Docker
+
+### docker-hub
+    docker pull dr1s/pihole_exporter
+    wget https://raw.githubusercontent.com/dr1s/pihole_exporter.py/master/docker-compose.yml
+    edit $AUTH_KEY and $IP in docker-compose.yml
+    docker-compose up
+
+### manual
     git clone https://github.com/dr1s/pihole_exporter.py.git
     docker build -t pihole_exporter .
     edit $AUTH_KEY and $IP in docker-compose.yml

@@ -8,90 +8,114 @@ import urllib.request
 import logging
 import threading
 
-
 from io import StringIO
-from flask import Flask
-from flask import Response
 from prometheus_client import Gauge, generate_latest
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 
-app = Flask(__name__)
+class pihole_exporter:
 
-api_url = None
-auth = None
-metrics = dict()
+    class _SilentHandler(WSGIRequestHandler):
+        """WSGI handler that does not log requests."""
 
-class _SilentHandler(WSGIRequestHandler):
-    """WSGI handler that does not log requests."""
+        def log_message(self, format, *args):
+            """Log nothing."""
 
-    def log_message(self, format, *args):
-        """Log nothing."""
+    def __init__(self, url, auth):
+        self.url = url
+        self.auth = auth
+        self.api_url = 'http://%s/admin/api.php' % self.url
+        self.metrics = dict()
+        self.app = self.make_prometheus_app()
+        self.httpd = None
 
-def get_json(url):
-    if auth:
-        url += "&auth=%s" % auth
-    response = urllib.request.urlopen(url)
-    data = response.read()
-    text = data.decode('utf-8')
-    io = StringIO(text)
-    json_text = json.load(io)
-    return json_text
+        self.summary_raw_url = self.api_url + '?summaryRaw'
+        self.top_item_url = self.api_url + '?topItems'
+        self.top_sources_url = self.api_url + '?getQuerySources'
+        self.forward_destinations_url = self.api_url + '?getForwardDestinations'
+        self.query_types_url = self.api_url + '?getQueryTypes'
 
-def get_summary(url):
-    summary_raw = get_json(url)
-    for i in summary_raw:
-        if not i in metrics:
-            metrics[i] = Gauge('pihole_%s' % i, i.replace('_',' '))
-        if i == "status":
-            if summary_raw[i] == 'enabled':
-                metrics[i].set(1)
+
+
+    def get_json(self, url):
+        if self.auth:
+            url += "&auth=%s" % self.auth
+        response = urllib.request.urlopen(url)
+        data = response.read()
+        text = data.decode('utf-8')
+        io = StringIO(text)
+        json_text = json.load(io)
+        return json_text
+
+    def get_summary(self, url):
+        summary_raw = self.get_json(url)
+        for i in summary_raw:
+            if not i in self.metrics:
+                self.metrics[i] = Gauge('pihole_%s' % i.lower(),
+                                        i.replace('_',' '))
+            if i == "status":
+                if summary_raw[i] == 'enabled':
+                    self.metrics[i].set(1)
+                else:
+                    self.metrics[i].set(0)
+            elif i == "gravity_last_updated":
+            #the relative time can be calculated
+                self.metrics[i].set(summary_raw[i]['absolute'])
             else:
-                metrics[i].set(0)
-        elif i == "gravity_last_updated":
-        #the relative time can be calculated
-            metrics[i].set(summary_raw[i]['absolute'])
-        else:
-            metrics[i].set(summary_raw[i])
+                self.metrics[i].set(summary_raw[i])
 
-def convert_json(json_data, name, option):
-    for i in json_data:
-        if name not in metrics:
-            metrics[name] = Gauge( 'pihole_%s' % name,
-                                name.replace('_', ' '),
-                                [ option ])
-        metrics[name].labels(i).set(json_data[i])
+    def convert_json(self, json_data, name, option):
+        for i in json_data:
+            if name not in self.metrics:
+                self.metrics[name] = Gauge( 'pihole_%s' % name,
+                                    name.replace('_', ' '),
+                                    [ option ])
+            self.metrics[name].labels(i).set(json_data[i])
 
-@app.route('/metrics', methods=['GET'])
-def get_metrics():
-    summary_raw_url = api_url + '?summaryRaw'
-    top_item_url = api_url + '?topItems'
-    top_sources_url = api_url + '?getQuerySources'
-    forward_destinations_url = api_url + '?getForwardDestinations'
-    query_types_url = api_url + '?getQueryTypes'
+    def get_metrics(self):
+        self.get_summary(self.summary_raw_url)
 
-    get_summary(summary_raw_url)
+        top_items = self.get_json(self.top_item_url)
+        if top_items:
+            top_queries = top_items['top_queries']
+            self.convert_json(top_queries, 'top_queries', 'domain')
+            top_ads = top_items['top_ads']
+            self.convert_json(top_ads, 'top_ads', 'domain')
 
-    top_items = get_json(top_item_url)
-    if top_items:
-        top_queries = top_items['top_queries']
-        convert_json(top_queries, 'top_queries', 'domain')
-        top_ads = top_items['top_ads']
-        convert_json(top_ads, 'top_ads', 'domain')
+        top_sources = self.get_json(self.top_sources_url)
+        if top_sources:
+            self.convert_json(  top_sources['top_sources'],
+                                'top_sources',
+                                'client')
 
-    top_sources = get_json(top_sources_url)
-    if top_sources:
-        convert_json(top_sources['top_sources'], 'top_sources', 'client')
+        fw_dest = self.get_json(self.forward_destinations_url)
+        if fw_dest:
+            self.convert_json(fw_dest['forward_destinations'],
+                        'forward_destinations', 'resolver')
 
-    fw_dest = get_json(forward_destinations_url)
-    if fw_dest:
-        convert_json(fw_dest['forward_destinations'],
-                    'forward_destinations', 'resolver')
+        qt = self.get_json(self.query_types_url)
+        if qt:
+            self.convert_json(qt['querytypes'], 'query_type', 'type')
 
-    qt = get_json(query_types_url)
-    if qt:
-        convert_json(qt['querytypes'], 'query_type', 'type')
+        return generate_latest()
 
-    return Response(generate_latest(), mimetype="text/plain")
+    def make_prometheus_app(self):
+
+        def prometheus_app(environ, start_response):
+            output = self.get_metrics()
+            status = str('200 OK')
+            headers = [(str('Content-type'), str('text/plain'))]
+            start_response(status, headers)
+            return [output]
+        return prometheus_app
+
+    def make_server(self, interface, port):
+        print("* Listening on %s:%s" % (interface, port))
+        self.httpd = make_server(   interface,
+                                    port,
+                                    self.app,
+                                    handler_class=self._SilentHandler)
+        t = threading.Thread(target=self.httpd.serve_forever)
+        t.start()
 
 
 def main():
@@ -111,18 +135,9 @@ def main():
         default=None)
     args = parser.parse_args()
 
-    url = "http://%s" % (args.pihole)
-    port = args.port
-    interface = args.interface
-    global auth
-    auth = args.auth
-    global api_url
-    api_url = url + '/admin/api.php'
+    exporter = pihole_exporter(args.pihole, args.auth)
+    exporter.make_server(args.interface, args.port)
 
-    print("* Listening on %s:%s" % (interface, port))
-    httpd = make_server(interface, port, app, handler_class=_SilentHandler)
-    t = threading.Thread(target=httpd.serve_forever)
-    t.start()
 
 if __name__ == '__main__':
     main()

@@ -7,7 +7,7 @@ setup(
     author='dr1s',
     license='MIT',
     description='Export pihole metrics for prometheus',
-    install_requires=["Flask", "prometheus_client"],
+    install_requires=["prometheus_client"],
     packages=find_packages(),
     include_package_data = True,
     entry_points={'console_scripts': ['pihole_exporter=pihole_exporter.pihole_exporter:main']},

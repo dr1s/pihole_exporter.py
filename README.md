@@ -110,15 +110,12 @@ Some metrics have been redacted.
 
 ### docker-hub
     docker pull dr1s/pihole_exporter
-    wget https://raw.githubusercontent.com/dr1s/pihole_exporter.py/master/docker-compose.yml
-    edit $AUTH_KEY and $IP in docker-compose.yml
-    docker-compose up
+    docker run --net=host -v /etc/pihole:/etc/pihole -t dr1s/pihole_exporter
 
 ### manual
     git clone https://github.com/dr1s/pihole_exporter.py.git
-    docker build -t pihole_exporter .
-    edit $AUTH_KEY and $IP in docker-compose.yml
-    docker-compose up
+    docker build -t dr1s/pihole_exporter .
+		docker run -d --net=host -v /etc/pihole:/etc/pihole -t dr1s/pihole_exporter
 
 # Usage
 	usage: pihole_exporter.py [-h] [-o PIHOLE] [-p PORT] [-i INTERFACE] [-a AUTH]
@@ -153,7 +150,7 @@ Otherwise get the hashed password from setupVars.conf:
 Use this hash as the argument for `--auth`
 
 	pihole_exporter --auth da1a51f575cd740be233d22548ecac1dbcc96ffa297283a6a204f9213a8aca71
-
+	docker run -d --net=host -t dr1s/pihole_exporter --pihole pi.hole --auth da1a51f575cd740be233d22548ecac1dbcc96ffa297283a6a204f9213a8aca71
 
 # Prometheus config
     - job_name: 'pihole'

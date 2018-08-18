@@ -136,14 +136,16 @@ Some metrics have been redacted.
 
 ## Usage Example
 
-    pihole_exporter --pihole localhost:80 --interface 0.0.0.0 --port 9311
+    pihole_exporter --pihole pi.hole --interface 0.0.0.0 --port 9311
 
 The previous used arguements are the default options. If nothing needs to be changed, pihole_exporter can be started without arguments.
 
 	pihole_exporter
 
 ## Authentication
-To use pihole_exporter with authentication enabled, get the hashed password from setupVars.conf
+If pihole_exporter is installed on the same host as pihole and the auth argument is not set, pihole_exporter will try to read the password from setupVars.conf
+
+Otherwise get the hashed password from setupVars.conf:
 
 	$ grep WEBPASSWORD /etc/pihole/setupVars.conf
 	WEBPASSWORD=da1a51f575cd740be233d22548ecac1dbcc96ffa297283a6a204f9213a8aca71
@@ -156,7 +158,7 @@ Use this hash as the argument for `--auth`
 # Prometheus config
     - job_name: 'pihole'
       static_configs:
-      - targets: ['localhost:9311']
+      - targets: ['pi.hole:9311']
 
 # Grafana dashboard
 ![Grafana Dashboard](grafana.png)

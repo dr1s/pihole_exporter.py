@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__VERSION__ = "0.2"
+__VERSION__ = "0.3.dev0"
 
 import json
 import argparse
@@ -117,12 +117,25 @@ class pihole_exporter:
         t.start()
 
 
+def get_authentication_token():
+    token = None
+    try:
+        with open('/etc/pihole/setupVars.conf') as f:
+            lines = f.readlines()
+            for line in lines:
+                if line.startswith('WEBPASSWORD'):
+                    token = line.split('=')[1]
+    except:
+        pass
+    return token
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='pihole_exporter')
     parser.add_argument('-o', '--pihole',
         help='pihole adress',
-        default='localhost:80')
+        default='pi.hole')
     parser.add_argument('-p', '--port', type=int,
         help='port pihole_exporter is listening on',
         default=9311)
@@ -134,7 +147,12 @@ def main():
         default=None)
     args = parser.parse_args()
 
-    exporter = pihole_exporter(args.pihole, args.auth)
+    auth_token = args.auth
+    if auth_token == None:
+        auth_token = get_authentication_token()
+
+
+    exporter = pihole_exporter(args.pihole, auth_token)
     exporter.make_server(args.interface, args.port)
 
 

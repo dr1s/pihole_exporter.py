@@ -115,7 +115,7 @@ Some metrics have been redacted.
 ### manual
     git clone https://github.com/dr1s/pihole_exporter.py.git
     docker build -t dr1s/pihole_exporter .
-		docker run -d --net=host -v /etc/pihole:/etc/pihole -t dr1s/pihole_exporter
+    docker run -d --net=host -v /etc/pihole:/etc/pihole -t dr1s/pihole_exporter
 
 # Usage
 	usage: pihole_exporter.py [-h] [-o PIHOLE] [-p PORT] [-i INTERFACE] [-a AUTH]

@@ -5,7 +5,6 @@ __VERSION__ = "0.3.dev0"
 import json
 import argparse
 import urllib.request
-import logging
 import threading
 
 from io import StringIO
@@ -32,8 +31,6 @@ class pihole_exporter:
         self.top_sources_url = self.api_url + '?getQuerySources'
         self.forward_destinations_url = self.api_url + '?getForwardDestinations'
         self.query_types_url = self.api_url + '?getQueryTypes'
-
-
 
     def get_json(self, url):
         if self.auth:
@@ -119,14 +116,15 @@ class pihole_exporter:
 
 def get_authentication_token():
     token = None
+    filename = '/etc/pihole/setupVars.conf'
     try:
-        with open('/etc/pihole/setupVars.conf') as f:
+        with open(filename) as f:
             lines = f.readlines()
             for line in lines:
                 if line.startswith('WEBPASSWORD'):
                     token = line.split('=')[1]
-    except:
-        pass
+    except (FileNotFoundError):
+        print("Unable to find: %s" % filename)
     return token
 
 

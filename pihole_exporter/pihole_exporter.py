@@ -107,10 +107,11 @@ class pihole_exporter:
 
     def make_server(self, interface, port):
         server_class = WSGIServer
+
         if ':' in interface:
-            if getattr(WSGIServer, 'address_family') == socket.AF_INET:
-                class server_class(server_class):
-                    address_family = socket.AF_INET6
+            if getattr(server_class, 'address_family') == socket.AF_INET:
+                    server_class.address_family = socket.AF_INET6
+                    
         print("* Listening on %s:%s" % (interface, port))
         self.httpd = make_server(   interface,
                                     port,

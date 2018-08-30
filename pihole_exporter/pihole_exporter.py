@@ -6,10 +6,11 @@ import json
 import argparse
 import urllib.request
 import threading
+import socket
 
 from io import StringIO
 from prometheus_client import Gauge, generate_latest
-from wsgiref.simple_server import make_server, WSGIRequestHandler
+from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
 
 class pihole_exporter:
 
@@ -105,10 +106,16 @@ class pihole_exporter:
         return prometheus_app
 
     def make_server(self, interface, port):
+        server_class = WSGIServer
+        if ':' in interface:
+            if getattr(WSGIServer, 'address_family') == socket.AF_INET:
+                class server_class(server_class):
+                    address_family = socket.AF_INET6
         print("* Listening on %s:%s" % (interface, port))
         self.httpd = make_server(   interface,
                                     port,
                                     self.make_prometheus_app(),
+                                    server_class=server_class,
                                     handler_class=self._SilentHandler)
         t = threading.Thread(target=self.httpd.serve_forever)
         t.start()

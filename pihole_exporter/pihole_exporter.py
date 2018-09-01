@@ -85,7 +85,7 @@ class pihole_exporter:
 
             for l in self.metrics_collected:
 
-                if not type(self.metrics_collected[l]) is dict:
+                if not isinstance(self.metrics_collected[l], dict):
                     if not l in metrics_collected:
                         self.metrics_collected[l] = False
                         self.metrics[l].set('0')
@@ -103,7 +103,7 @@ class pihole_exporter:
 
             for l in metrics_collected:
 
-                if not type(metrics_collected[l]) is dict:
+                if not isinstance(metrics_collected[l], dict):
                     if not l in self.metrics_collected:
                         self.metrics_collected[l] = metrics_collected[l]
                 else:

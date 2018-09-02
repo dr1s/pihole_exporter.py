@@ -1,9 +1,18 @@
-# pihole_exporter
+# pihole_exporter.py
+
+
+A prometheus exporter for PiHole written in Python 3.
+
+![Grafana Dashboard](grafana.png)
+See [grafana_dashboard.json](grafana_dashboard.json)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/363a7755d05b4d17beb6ed643850518f)](https://www.codacy.com/project/dr1s/pihole_exporter.py/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dr1s/pihole_exporter.py&amp;utm_campaign=Badge_Grade_Dashboard)
 [![Docker Automated build](https://img.shields.io/docker/automated/dr1s/pihole_exporter.svg)](https://img.shields.io/docker/automated/dr1s/pihole_exporter.svg)
 
-- [pihole_exporter](#piholeexporter)
+# Content
+- [pihole_exporter.py](#piholeexporterpy)
+- [Content](#content)
 - [Available metrics](#available-metrics)
 	- [Metrics Example](#metrics-example)
 - [Setup](#setup)
@@ -16,14 +25,6 @@
 	- [Usage Example](#usage-example)
 	- [Authentication](#authentication)
 - [Prometheus config](#prometheus-config)
-
-A prometheus exporter for PiHole written in Python 3.
-![Grafana Dashboard](grafana.png)
-See [grafana_dashboard.json](grafana_dashboard.json)
-
-
-
-
 
 # Available metrics
 * Queries forwarded (24h)

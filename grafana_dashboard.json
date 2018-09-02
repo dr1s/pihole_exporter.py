@@ -2,7 +2,6 @@
   "annotations": {
     "list": [
       {
-        "$$hashKey": "object:125",
         "builtIn": 1,
         "datasource": "-- Grafana --",
         "enable": true,
@@ -17,6 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 9,
+  "links": [],
   "panels": [
     {
       "cacheTimeout": null,
@@ -37,8 +37,8 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 6,
-        "w": 4,
+        "h": 4,
+        "w": 3,
         "x": 0,
         "y": 0
       },
@@ -117,9 +117,9 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 4,
+        "h": 4,
+        "w": 3,
+        "x": 3,
         "y": 0
       },
       "id": 10,
@@ -197,9 +197,9 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 8,
+        "h": 4,
+        "w": 3,
+        "x": 6,
         "y": 0
       },
       "id": 11,
@@ -279,9 +279,9 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 12,
+        "h": 4,
+        "w": 3,
+        "x": 9,
         "y": 0
       },
       "id": 7,
@@ -361,9 +361,9 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 16,
+        "h": 4,
+        "w": 3,
+        "x": 12,
         "y": 0
       },
       "id": 14,
@@ -427,6 +427,87 @@
       "colorBackground": false,
       "colorValue": false,
       "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": null,
+      "format": "dtdurations",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 15,
+        "y": 0
+      },
+      "id": 16,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false
+      },
+      "tableColumn": "instance",
+      "targets": [
+        {
+          "expr": "time() - pihole_gravity_last_updated",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "thresholds": "",
+      "title": "Gravity Last Updated",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "avg"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
         "#d44a3a",
         "rgba(237, 129, 40, 0.89)",
         "#299c46"
@@ -441,9 +522,9 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 20,
+        "h": 4,
+        "w": 3,
+        "x": 18,
         "y": 0
       },
       "id": 13,
@@ -510,7 +591,7 @@
     },
     {
       "cacheTimeout": null,
-      "colorBackground": false,
+      "colorBackground": true,
       "colorValue": false,
       "colors": [
         "#299c46",
@@ -518,7 +599,7 @@
         "#d44a3a"
       ],
       "datasource": null,
-      "format": "dtdurations",
+      "format": "none",
       "gauge": {
         "maxValue": 100,
         "minValue": 0,
@@ -527,23 +608,21 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 0,
-        "y": 6
+        "h": 4,
+        "w": 3,
+        "x": 21,
+        "y": 0
       },
-      "id": 16,
+      "id": 20,
       "interval": null,
       "links": [],
       "mappingType": 1,
       "mappingTypes": [
         {
-          "$$hashKey": "object:990",
           "name": "value to text",
           "value": 1
         },
         {
-          "$$hashKey": "object:991",
           "name": "range to text",
           "value": 2
         }
@@ -568,27 +647,34 @@
         "lineColor": "rgb(31, 120, 193)",
         "show": false
       },
-      "tableColumn": "instance",
+      "tableColumn": "",
       "targets": [
         {
-          "$$hashKey": "object:892",
-          "expr": "time() - pihole_gravity_last_updated",
+          "expr": "pihole_status",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "",
           "refId": "A"
         }
       ],
-      "thresholds": "",
-      "title": "Gravity Last Updated",
+      "thresholds": "Up,Down",
+      "title": "Status",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
         {
-          "$$hashKey": "object:993",
           "op": "=",
           "text": "N/A",
           "value": "null"
+        },
+        {
+          "op": "=",
+          "text": "Up",
+          "value": "1"
+        },
+        {
+          "op": "=",
+          "text": "Down",
+          "value": "0"
         }
       ],
       "valueName": "avg"
@@ -607,19 +693,19 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 4
       },
       "id": 6,
       "legend": {
         "alignAsTable": true,
         "avg": false,
-        "current": false,
+        "current": true,
         "max": false,
         "min": false,
         "rightSide": true,
         "show": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 2,
@@ -635,7 +721,6 @@
       "steppedLine": false,
       "targets": [
         {
-          "$$hashKey": "object:786",
           "expr": "pihole_top_sources",
           "format": "time_series",
           "intervalFactor": 2,
@@ -665,7 +750,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:814",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -674,7 +758,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:815",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -702,19 +785,19 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 12
       },
       "id": 5,
       "legend": {
         "alignAsTable": true,
         "avg": false,
-        "current": false,
+        "current": true,
         "max": false,
         "min": false,
         "rightSide": true,
         "show": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 2,
@@ -794,19 +877,19 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 19
       },
       "id": 4,
       "legend": {
         "alignAsTable": true,
         "avg": false,
-        "current": false,
+        "current": true,
         "max": false,
         "min": false,
         "rightSide": true,
         "show": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 2,
@@ -883,7 +966,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 35
+        "y": 27
       },
       "id": 8,
       "legend": {
@@ -911,7 +994,6 @@
       "steppedLine": false,
       "targets": [
         {
-          "$$hashKey": "object:254",
           "expr": "pihole_forward_destinations{resolver!=\"local|::1\"}",
           "format": "time_series",
           "intervalFactor": 2,
@@ -938,7 +1020,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:407",
           "format": "percent",
           "label": null,
           "logBase": 1,
@@ -947,7 +1028,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:408",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -972,7 +1052,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 35
+        "y": 27
       },
       "id": 12,
       "legend": {
@@ -1058,7 +1138,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 44
+        "y": 36
       },
       "id": 18,
       "legend": {
@@ -1084,7 +1164,6 @@
       "steppedLine": false,
       "targets": [
         {
-          "$$hashKey": "object:1232",
           "expr": "pihole_reply_cname",
           "format": "time_series",
           "intervalFactor": 1,
@@ -1092,7 +1171,6 @@
           "refId": "A"
         },
         {
-          "$$hashKey": "object:1254",
           "expr": "pihole_reply_ip",
           "format": "time_series",
           "intervalFactor": 1,
@@ -1100,7 +1178,6 @@
           "refId": "B"
         },
         {
-          "$$hashKey": "object:1276",
           "expr": "pihole_reply_nodata",
           "format": "time_series",
           "intervalFactor": 1,
@@ -1108,7 +1185,6 @@
           "refId": "C"
         },
         {
-          "$$hashKey": "object:1298",
           "expr": "pihole_reply_nxdomain",
           "format": "time_series",
           "intervalFactor": 1,
@@ -1198,5 +1274,5 @@
   "timezone": "browser",
   "title": "Pi Hole",
   "uid": "000000009",
-  "version": 6
+  "version": 13
 }

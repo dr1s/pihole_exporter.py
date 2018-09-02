@@ -3,9 +3,6 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/363a7755d05b4d17beb6ed643850518f)](https://www.codacy.com/project/dr1s/pihole_exporter.py/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dr1s/pihole_exporter.py&amp;utm_campaign=Badge_Grade_Dashboard)
 [![Docker Automated build](https://img.shields.io/docker/automated/dr1s/pihole_exporter.svg)](https://img.shields.io/docker/automated/dr1s/pihole_exporter.svg)
 
-A prometheus exporter for PiHole written in Python 3.
-
-
 - [pihole_exporter](#piholeexporter)
 - [Available metrics](#available-metrics)
 	- [Metrics Example](#metrics-example)
@@ -19,7 +16,13 @@ A prometheus exporter for PiHole written in Python 3.
 	- [Usage Example](#usage-example)
 	- [Authentication](#authentication)
 - [Prometheus config](#prometheus-config)
-- [Grafana dashboard](#grafana-dashboard)
+
+A prometheus exporter for PiHole written in Python 3.
+![Grafana Dashboard](grafana.png)
+See [grafana_dashboard.json](grafana_dashboard.json)
+
+
+
 
 
 # Available metrics
@@ -156,8 +159,3 @@ Use this hash as the argument for `--auth`
     - job_name: 'pihole'
       static_configs:
       - targets: ['pi.hole:9311']
-
-# Grafana dashboard
-![Grafana Dashboard](grafana.png)
-
-See [grafana_dashboard.json](grafana_dashboard.json)

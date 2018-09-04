@@ -1,6 +1,6 @@
-x#!/usr/bin/env python3
+#!/usr/bin/env python3
 
-__VERSION__ = "0.3"
+__VERSION__ = "0.3.1"
 
 import json
 import argparse

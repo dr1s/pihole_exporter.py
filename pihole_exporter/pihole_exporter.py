@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__VERSION__ = "0.3.1"
+__VERSION__ = "0.3.2.dev0"
 
 import json
 import argparse
@@ -26,7 +26,7 @@ class pihole_exporter:
         self.api_url = 'http://%s/admin/api.php' % self.url
         self.metrics = dict()
         self.httpd = None
-        self.metrics_collected = dict()
+        self.metrics_data = dict()
 
         self.summary_raw_url = self.api_url + '?summaryRaw'
         self.top_item_url = self.api_url + '?topItems'
@@ -47,116 +47,113 @@ class pihole_exporter:
     def get_summary(self, url):
 
         summary_raw = self.get_json(url)
-        metrics_collected = dict()
+        metrics_data = dict()
 
         for i in summary_raw:
-            if not i in self.metrics:
-                self.metrics[i] = Gauge('pihole_%s' % i.lower(),
-                                        i.replace('_',' '))
-            metrics_collected[i] = True
             if i == "status":
                 if summary_raw[i] == 'enabled':
-                    self.metrics[i].set(1)
+                    metrics_data[i] = 1
                 else:
-                    self.metrics[i].set(0)
+                    metrics_data[i] = 0
             elif i == "gravity_last_updated":
-            #the relative time can be calculated
-                self.metrics[i].set(summary_raw[i]['absolute'])
+                metrics_data[i] = summary_raw[i]['absolute']
             else:
-                self.metrics[i].set(summary_raw[i])
-        return metrics_collected
+                metrics_data[i] = summary_raw[i]
+        return metrics_data
 
-    def convert_json(self, json_data, name, option):
-        metrics_collected = dict()
-        for i in json_data:
-            if name not in self.metrics:
-                self.metrics[name] = Gauge( 'pihole_%s' % name,
-                                    name.replace('_', ' '),
-                                    [ option ])
-            self.metrics[name].labels(i).set(json_data[i])
-            metrics_collected[i] = True
-        return metrics_collected
-
-    def _merge_collected_metrics(self, metrics_collected):
-
-        if len(self.metrics_collected) == 0:
-            self.metrics_collected = metrics_collected
-        else:
-
-            for l in self.metrics_collected:
-
-                if not isinstance(self.metrics_collected[l], dict):
-                    if not l in metrics_collected:
-                        self.metrics_collected[l] = False
-                        self.metrics[l].set('0')
-                    else:
-                        self.metrics_collected[l] = True
-
-                else:
-
-                    for m in self.metrics_collected[l]:
-                        if not m in metrics_collected[l]:
-                            self.metrics_collected[l][m] = False
-                            self.metrics[l].labels(m).set('0')
-                        else:
-                            self.metrics_collected[l][m] = True
-
-            for l in metrics_collected:
-
-                if not isinstance(metrics_collected[l], dict):
-                    if not l in self.metrics_collected:
-                        self.metrics_collected[l] = metrics_collected[l]
-                else:
-                    for m in metrics_collected[l]:
-                        if not m in self.metrics_collected[l]:
-                            self.metrics_collected[l][m] = metrics_collected[l][m]
-
-
+    def get_label(self, name):
+        if name in ['top_queries', 'top_ads']:
+            return 'domain'
+        elif name == 'top_sources':
+            return 'client'
+        elif name == 'forward_destinations':
+            return 'resolver'
+        elif name == 'query_type':
+            return 'type'
 
     def get_metrics(self):
-        metrics_collected = self.get_summary(self.summary_raw_url)
+        metrics_data = self.get_summary(self.summary_raw_url)
 
         top_items = self.get_json(self.top_item_url)
         if top_items:
             top_queries = top_items['top_queries']
-            metrics_collected['top_queries'] = self.convert_json(
-                                                        top_queries,
-                                                        'top_queries',
-                                                        'domain')
+            metrics_data['top_queries'] = top_queries
             top_ads = top_items['top_ads']
-            metrics_collected['top_ads'] = self.convert_json(top_ads,
-                                                            'top_ads',
-                                                            'domain')
+            metrics_data['top_ads'] = top_ads
 
         top_sources = self.get_json(self.top_sources_url)
         if top_sources:
-            metrics_collected['top_sources'] = self.convert_json(
-                                                top_sources['top_sources'],
-                                                'top_sources',
-                                                'client')
+            metrics_data['top_sources'] = top_sources['top_sources']
 
         fw_dest = self.get_json(self.forward_destinations_url)
         if fw_dest:
-            metrics_collected['forward_destinations'] = self.convert_json(
-                                                fw_dest['forward_destinations'],
-                                                'forward_destinations',
-                                                'resolver')
+            fwd = fw_dest['forward_destinations']
+            metrics_data['forward_destinations'] = fwd
 
         qt = self.get_json(self.query_types_url)
         if qt:
-            metrics_collected['query_type'] = self.convert_json(
-                                                qt['querytypes'],
-                                                'query_type',
-                                                'type')
+            metrics_data['query_type'] = qt['querytypes']
 
-        self._merge_collected_metrics(metrics_collected)
+        return metrics_data
 
+    def update_metrics_data(self, metrics_data):
+
+        if len(self.metrics_data) == 0:
+            self.metrics_data = metrics_data
+        else:
+
+            for l in self.metrics_data:
+
+                if not isinstance(self.metrics_data[l], dict):
+                    if l in metrics_data:
+                            self.metrics_data[l] = metrics_data[l]
+                    else:
+                            self.metrics_data[l] = 0
+                else:
+                    for m in self.metrics_data[l]:
+                        if m in metrics_data[l]:
+                            self.metrics_data[l][m] = metrics_data[l][m]
+                        else:
+                            self.metrics_data[l][m] = 0
+
+            for l in metrics_data:
+                if not l in self.metrics_data:
+                    self.metrics_data[l] = metrics_data[l]
+                else:
+                    if isinstance(metrics_data[l], dict):
+                        for m in metrics_data[l]:
+                            if not m in self.metrics_data[l]:
+                                self.metrics_data[l][m] = metrics_data[l][m]
+
+
+    def generate_latest(self):
+        data = self.get_metrics()
+        self.update_metrics_data(data)
+
+        for source in self.metrics_data:
+                if not isinstance(self.metrics_data[source], dict):
+                    if not source in self.metrics:
+                        self.metrics[source] = Gauge(
+                            'pihole_%s' % source.lower(),
+                            source.replace('_',' '))
+                    self.metrics[source].set(
+                        self.metrics_data[source])
+                else:
+                    for i in self.metrics_data[source]:
+                        if not source in self.metrics:
+                            label = self.get_label(source)
+                            self.metrics[source] = Gauge( 'pihole_%s' % source,
+                                source.replace('_', ' '),
+                                [ label ])
+                        else:
+                            self.metrics[source].labels(i).set(
+                                self.metrics_data[source][i])
         return generate_latest()
 
     def make_prometheus_app(self):
 
         def prometheus_app(environ, start_response):
-            output = self.get_metrics()
+            output = self.generate_latest()
             status = str('200 OK')
             headers = [(str('Content-type'), str('text/plain'))]
             start_response(status, headers)

@@ -63,27 +63,45 @@ class pihole_exporter:
     def get_label(self, name):
         if name in ['top_queries', 'top_ads']:
             return 'domain'
-        elif name in ['top_sources', 'all_queries']:
+        elif name in [  'top_sources',
+                        'all_queries',
+                        'all_queries_blocked']:
             return 'client'
         elif name == 'forward_destinations':
             return 'resolver'
         elif name == 'query_type':
             return 'type'
 
+
+    def parse_client_metrics(self, client_metrics, hostname, domain,):
+        if not hostname in client_metrics:
+            client_metrics[hostname] = dict()
+        if not domain in client_metrics[hostname]:
+            client_metrics[hostname][domain] = 1
+        else:
+            client_metrics[hostname][domain] += 1
+        return client_metrics
+
     def get_all_queries_data(self):
         aq = self.get_json(self.get_all_queries_url)
         if aq:
             client_metrics = dict()
+            clients_blocked_metrics = dict()
             for i in aq['data']:
+                print(i)
                 hostname = i[3]
                 domain = i[2]
-                if not hostname in client_metrics:
-                    client_metrics[hostname] = dict()
-                if not domain in client_metrics[hostname]:
-                    client_metrics[hostname][domain] = 1
-                else:
-                    client_metrics[hostname][domain] += 1
-        return client_metrics
+                answer_type = i[4]
+                client_metrics = self.parse_client_metrics(
+                                            client_metrics,
+                                            hostname,
+                                            domain)
+                if answer_type in ['1','4']:
+                    clients_blocked_metrics = self.parse_client_metrics(
+                                                clients_blocked_metrics,
+                                                hostname,
+                                                domain)
+        return client_metrics, clients_blocked_metrics
 
     def get_metrics(self):
         metrics_data = self.get_summary()
@@ -109,7 +127,8 @@ class pihole_exporter:
             metrics_data['query_type'] = qt['querytypes']
 
 
-        metrics_data['all_queries'] = self.get_all_queries_data()
+        metrics_data['all_queries'], metrics_data['all_queries_blocked'] = \
+            self.get_all_queries_data()
         return metrics_data
 
 

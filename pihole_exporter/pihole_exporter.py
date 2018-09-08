@@ -27,8 +27,8 @@ class pihole_exporter:
         self.metrics_data = dict()
 
         self.summary_raw_url = self.api_url + '?summaryRaw'
-        self.top_item_url = self.api_url + '?topItems'
-        self.top_sources_url = self.api_url + '?getQuerySources'
+        self.top_item_url = self.api_url + '?topItems=100'
+        self.top_sources_url = self.api_url + '?getQuerySources=100'
         self.forward_destinations_url = self.api_url + '?getForwardDestinations'
         self.query_types_url = self.api_url + '?getQueryTypes'
         self.get_all_queries_url = self.api_url + '?getAllQueries'

@@ -112,80 +112,83 @@ class pihole_exporter:
         metrics_data['all_queries'] = self.get_all_queries_data()
         return metrics_data
 
+
+    def update_value(self, data_dict, value):
+        if value in data_dict:
+            return data_dict[value]
+        return 0
+
+
+    def update_existing_metrics(self, data_dict, overall_data_dict=None):
+
+        if overall_data_dict is None:
+            overall_data_dict = self.metrics_data
+
+        for key in overall_data_dict:
+            if not isinstance(overall_data_dict[key], dict):
+                overall_data_dict[key] = self.update_value(overall_data_dict, key)
+            else:
+                overall_data_dict[key] = self.update_existing_metrics(
+                                                data_dict[key],
+                                                overall_data_dict[key])
+        return overall_data_dict
+
+
+    def update_new_metrics(self, data_dict, overall_data_dict=None):
+
+        if overall_data_dict is None:
+            overall_data_dict = self.metrics_data
+
+        for key in data_dict:
+            if not key in overall_data_dict:
+                overall_data_dict[key] = data_dict[key]
+            else:
+                if isinstance(data_dict[key], dict):
+                    overall_data_dict[key] = self.update_new_metrics(
+                                                    data_dict[key],
+                                                    overall_data_dict[key])
+        return overall_data_dict
+
     def update_metrics_data(self, metrics_data):
 
         if len(self.metrics_data) == 0:
             self.metrics_data = metrics_data
         else:
-
-            for l in self.metrics_data:
-
-                if not isinstance(self.metrics_data[l], dict):
-                    if l in metrics_data:
-                            self.metrics_data[l] = metrics_data[l]
-                    else:
-                            self.metrics_data[l] = 0
-                else:
-                    for m in self.metrics_data[l]:
-                        if not isinstance(self.metrics_data[l][m], dict):
-                            if m in metrics_data[l]:
-                                self.metrics_data[l][m] = metrics_data[l][m]
-                            else:
-                                self.metrics_data[l][m] = 0
-                        else:
-                            for d in self.metrics_data[l][m]:
-                                if d in metrics_data[l][m]:
-                                    self.metrics_data[l][m][d] = metrics_data[l][m][d]
-                                else:
-                                    self.metrics_data[l][m][d] = 0
-
-            for l in metrics_data:
-                if not l in self.metrics_data:
-                    self.metrics_data[l] = metrics_data[l]
-                else:
-                    if isinstance(metrics_data[l], dict):
-                        for m in metrics_data[l]:
-                            if not isinstance(metrics_data[l][m], dict):
-                                if not m in self.metrics_data[l]:
-                                    self.metrics_data[l][m] = metrics_data[l][m]
-                            else:
-                                for d in metrics_data[l][m]:
-                                    if not d in self.metrics_data[l][m]:
-                                        self.metrics_data[l][m][d] = metrics_data[l][m][d]
-
+            self.metrics_data = self.update_existing_metrics(metrics_data)
+            self.metrics_data = self.update_new_metrics(metrics_data)
 
     def generate_latest(self):
         data = self.get_metrics()
         self.update_metrics_data(data)
 
         for source in self.metrics_data:
-                if not isinstance(self.metrics_data[source], dict):
+            if not isinstance(self.metrics_data[source], dict):
+                if not source in self.metrics:
+                    self.metrics[source] = Gauge(
+                        'pihole_%s' % source.lower(),
+                        source.replace('_',' '))
+                self.metrics[source].set(
+                    self.metrics_data[source])
+            else:
+                for i in self.metrics_data[source]:
                     if not source in self.metrics:
-                        self.metrics[source] = Gauge(
-                            'pihole_%s' % source.lower(),
-                            source.replace('_',' '))
-                    self.metrics[source].set(
-                        self.metrics_data[source])
-                else:
-                    for i in self.metrics_data[source]:
-                        if not source in self.metrics:
-                            label = self.get_label(source)
-                            if not isinstance(self.metrics_data[source][i], dict):
-                                self.metrics[source] = Gauge( 'pihole_%s' % source,
-                                    source.replace('_', ' '),
-                                    [ label ])
-                            else:
-                                self.metrics[source] = Gauge( 'pihole_%s' % source,
-                                    source.replace('_', ' '),
-                                    [ label, 'domain' ])
+                        label = self.get_label(source)
+                        if not isinstance(self.metrics_data[source][i], dict):
+                            self.metrics[source] = Gauge( 'pihole_%s' % source,
+                                source.replace('_', ' '),
+                                [ label ])
                         else:
-                            if not isinstance(self.metrics_data[source][i], dict):
-                                self.metrics[source].labels(i).set(
-                                    self.metrics_data[source][i])
-                            else:
-                                for d in self.metrics_data[source][i]:
-                                    self.metrics[source].labels(i, d).set(
-                                        self.metrics_data[source][i][d])
+                            self.metrics[source] = Gauge( 'pihole_%s' % source,
+                                source.replace('_', ' '),
+                                [ label, 'domain' ])
+                    else:
+                        if not isinstance(self.metrics_data[source][i], dict):
+                            self.metrics[source].labels(i).set(
+                                self.metrics_data[source][i])
+                        else:
+                            for d in self.metrics_data[source][i]:
+                                self.metrics[source].labels(i, d).set(
+                                    self.metrics_data[source][i][d])
         return generate_latest()
 
     def make_prometheus_app(self):

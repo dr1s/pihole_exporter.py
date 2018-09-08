@@ -42,6 +42,7 @@ See [grafana_dashboard.json](grafana_dashboard.json)
 * Forward destinations
 * Query type
 * Reply type
+* DNS queries by host
 
 ## Metrics Example
 Some metrics have been redacted.

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-__VERSION__ = "0.4.dev0"
-
 import json
 import argparse
 import urllib.request
@@ -152,7 +150,7 @@ class pihole_exporter:
                                     self.metrics_data[l][m] = metrics_data[l][m]
                             else:
                                 for d in metrics_data[l][m]:
-                                    if not d in self.metrics_data[l][m][d]:
+                                    if not d in self.metrics_data[l][m]:
                                         self.metrics_data[l][m][d] = metrics_data[l][m][d]
 
 

@@ -102,6 +102,12 @@ Some metrics have been redacted.
 # Setup
 
 ## pip
+### PyPI
+
+    pip3 install --upgrade pihole_exporter
+
+### github master branch
+
     pip3 install --upgrade git+https://github.com/dr1s/pihole_exporter.py.git
 
 ## manual

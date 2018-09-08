@@ -88,7 +88,6 @@ class pihole_exporter:
             client_metrics = dict()
             clients_blocked_metrics = dict()
             for i in aq['data']:
-                print(i)
                 hostname = i[3]
                 domain = i[2]
                 answer_type = i[4]

@@ -16,8 +16,22 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 9,
+  "iteration": 1536392819484,
   "links": [],
   "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 22,
+      "panels": [],
+      "title": "Main",
+      "type": "row"
+    },
     {
       "cacheTimeout": null,
       "colorBackground": false,
@@ -40,7 +54,7 @@
         "h": 4,
         "w": 3,
         "x": 0,
-        "y": 0
+        "y": 1
       },
       "id": 9,
       "interval": null,
@@ -120,7 +134,7 @@
         "h": 4,
         "w": 3,
         "x": 3,
-        "y": 0
+        "y": 1
       },
       "id": 10,
       "interval": null,
@@ -200,7 +214,7 @@
         "h": 4,
         "w": 3,
         "x": 6,
-        "y": 0
+        "y": 1
       },
       "id": 11,
       "interval": null,
@@ -282,7 +296,7 @@
         "h": 4,
         "w": 3,
         "x": 9,
-        "y": 0
+        "y": 1
       },
       "id": 7,
       "interval": null,
@@ -364,7 +378,7 @@
         "h": 4,
         "w": 3,
         "x": 12,
-        "y": 0
+        "y": 1
       },
       "id": 14,
       "interval": null,
@@ -444,7 +458,7 @@
         "h": 4,
         "w": 3,
         "x": 15,
-        "y": 0
+        "y": 1
       },
       "id": 16,
       "interval": null,
@@ -525,7 +539,7 @@
         "h": 4,
         "w": 3,
         "x": 18,
-        "y": 0
+        "y": 1
       },
       "id": 13,
       "interval": null,
@@ -611,7 +625,7 @@
         "h": 4,
         "w": 3,
         "x": 21,
-        "y": 0
+        "y": 1
       },
       "id": 20,
       "interval": null,
@@ -693,7 +707,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 4
+        "y": 5
       },
       "id": 6,
       "legend": {
@@ -785,7 +799,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 13
       },
       "id": 5,
       "legend": {
@@ -877,7 +891,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 20
       },
       "id": 4,
       "legend": {
@@ -966,7 +980,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 27
+        "y": 28
       },
       "id": 8,
       "legend": {
@@ -1052,7 +1066,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 27
+        "y": 28
       },
       "id": 12,
       "legend": {
@@ -1138,7 +1152,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 36
+        "y": 37
       },
       "id": 18,
       "legend": {
@@ -1231,19 +1245,154 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 46
+      },
+      "id": 24,
+      "panels": [],
+      "title": "Clients",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fill": 1,
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 47
+      },
+      "id": 26,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "minSpan": 24,
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "repeat": "clients",
+      "repeatDirection": "h",
+      "scopedVars": {
+        "clients": {
+          "selected": true,
+          "text": "localhost",
+          "value": "localhost"
+        }
+      },
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "pihole_all_queries{client=~\"$clients\"}",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{ domain  }}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "$clients",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     }
   ],
-  "refresh": "1m",
+  "schemaVersion": 16,
   "style": "dark",
   "tags": [
     "pi-hole",
     "app"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "tags": [],
+          "text": "localhost",
+          "value": [
+            "localhost"
+          ]
+        },
+        "datasource": "Prometheus",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Clients",
+        "multi": true,
+        "name": "clients",
+        "query": "label_values(pihole_all_queries, client)",
+        "refresh": 0,
+        "regex": "",
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {
@@ -1274,5 +1423,5 @@
   "timezone": "browser",
   "title": "Pi Hole",
   "uid": "000000009",
-  "version": 13
+  "version": 14
 }

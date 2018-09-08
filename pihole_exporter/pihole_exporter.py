@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__VERSION__ = "0.3.2.dev0"
+__VERSION__ = "0.4.dev0"
 
 import json
 import argparse
@@ -33,6 +33,7 @@ class pihole_exporter:
         self.top_sources_url = self.api_url + '?getQuerySources'
         self.forward_destinations_url = self.api_url + '?getForwardDestinations'
         self.query_types_url = self.api_url + '?getQueryTypes'
+        self.get_all_queries_url = self.api_url + '?getAllQueries'
 
     def get_json(self, url):
         if self.auth:
@@ -44,9 +45,9 @@ class pihole_exporter:
         json_text = json.load(io)
         return json_text
 
-    def get_summary(self, url):
+    def get_summary(self):
 
-        summary_raw = self.get_json(url)
+        summary_raw = self.get_json(self.summary_raw_url)
         metrics_data = dict()
 
         for i in summary_raw:
@@ -64,15 +65,30 @@ class pihole_exporter:
     def get_label(self, name):
         if name in ['top_queries', 'top_ads']:
             return 'domain'
-        elif name == 'top_sources':
+        elif name in ['top_sources', 'all_queries']:
             return 'client'
         elif name == 'forward_destinations':
             return 'resolver'
         elif name == 'query_type':
             return 'type'
 
+    def get_all_queries_data(self):
+        aq = self.get_json(self.get_all_queries_url)
+        if aq:
+            client_metrics = dict()
+            for i in aq['data']:
+                hostname = i[3]
+                domain = i[2]
+                if not hostname in client_metrics:
+                    client_metrics[hostname] = dict()
+                if not domain in client_metrics[hostname]:
+                    client_metrics[hostname][domain] = 1
+                else:
+                    client_metrics[hostname][domain] += 1
+        return client_metrics
+
     def get_metrics(self):
-        metrics_data = self.get_summary(self.summary_raw_url)
+        metrics_data = self.get_summary()
 
         top_items = self.get_json(self.top_item_url)
         if top_items:
@@ -94,6 +110,8 @@ class pihole_exporter:
         if qt:
             metrics_data['query_type'] = qt['querytypes']
 
+
+        metrics_data['all_queries'] = self.get_all_queries_data()
         return metrics_data
 
     def update_metrics_data(self, metrics_data):
@@ -111,10 +129,17 @@ class pihole_exporter:
                             self.metrics_data[l] = 0
                 else:
                     for m in self.metrics_data[l]:
-                        if m in metrics_data[l]:
-                            self.metrics_data[l][m] = metrics_data[l][m]
+                        if not isinstance(self.metrics_data[l][m], dict):
+                            if m in metrics_data[l]:
+                                self.metrics_data[l][m] = metrics_data[l][m]
+                            else:
+                                self.metrics_data[l][m] = 0
                         else:
-                            self.metrics_data[l][m] = 0
+                            for d in self.metrics_data[l][m]:
+                                if d in metrics_data[l][m]:
+                                    self.metrics_data[l][m][d] = metrics_data[l][m][d]
+                                else:
+                                    self.metrics_data[l][m][d] = 0
 
             for l in metrics_data:
                 if not l in self.metrics_data:
@@ -122,8 +147,13 @@ class pihole_exporter:
                 else:
                     if isinstance(metrics_data[l], dict):
                         for m in metrics_data[l]:
-                            if not m in self.metrics_data[l]:
-                                self.metrics_data[l][m] = metrics_data[l][m]
+                            if not isinstance(metrics_data[l][m], dict):
+                                if not m in self.metrics_data[l]:
+                                    self.metrics_data[l][m] = metrics_data[l][m]
+                            else:
+                                for d in metrics_data[l][m]:
+                                    if not d in self.metrics_data[l][m][d]:
+                                        self.metrics_data[l][m][d] = metrics_data[l][m][d]
 
 
     def generate_latest(self):
@@ -142,12 +172,22 @@ class pihole_exporter:
                     for i in self.metrics_data[source]:
                         if not source in self.metrics:
                             label = self.get_label(source)
-                            self.metrics[source] = Gauge( 'pihole_%s' % source,
-                                source.replace('_', ' '),
-                                [ label ])
+                            if not isinstance(self.metrics_data[source][i], dict):
+                                self.metrics[source] = Gauge( 'pihole_%s' % source,
+                                    source.replace('_', ' '),
+                                    [ label ])
+                            else:
+                                self.metrics[source] = Gauge( 'pihole_%s' % source,
+                                    source.replace('_', ' '),
+                                    [ label, 'domain' ])
                         else:
-                            self.metrics[source].labels(i).set(
-                                self.metrics_data[source][i])
+                            if not isinstance(self.metrics_data[source][i], dict):
+                                self.metrics[source].labels(i).set(
+                                    self.metrics_data[source][i])
+                            else:
+                                for d in self.metrics_data[source][i]:
+                                    self.metrics[source].labels(i, d).set(
+                                        self.metrics_data[source][i][d])
         return generate_latest()
 
     def make_prometheus_app(self):

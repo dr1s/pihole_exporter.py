@@ -1,2 +1,2 @@
 name = 'pihole_exporter'
-__VERSION__ = '0.4.1.dev0'
+__VERSION__ = '0.4.1'

@@ -194,7 +194,6 @@ class pihole_exporter:
             self.metrics_data = self.update_existing_metrics(metrics_data)
             self.metrics_data = self.update_new_metrics(metrics_data)
 
-
     def update_metric(self, source):
         self.add_metric(source)
         self.metrics[source].set(
@@ -216,15 +215,14 @@ class pihole_exporter:
 
     def update_metric_label(self, source):
         for i in self.metrics_data[source]:
-            if not source in self.metrics:
-                if not isinstance(self.metrics_data[source][i], dict):
-                    self.add_metric(source, self.get_labels([source]))
-                    self.metrics[source].labels(i).set(self.metrics_data[source][i])
-                else:
-                    self.add_metric(source, self.get_labels([source, 'domain']))
-                    for d in self.metrics_data[source][i]:
-                        self.metrics[source].labels(i, d).set(
-                            self.metrics_data[source][i][d])
+            if not isinstance(self.metrics_data[source][i], dict):
+                self.add_metric(source, self.get_labels([source]))
+                self.metrics[source].labels(i).set(self.metrics_data[source][i])
+            else:
+                self.add_metric(source, self.get_labels([source, 'domain']))
+                for d in self.metrics_data[source][i]:
+                    self.metrics[source].labels(i, d).set(
+                        self.metrics_data[source][i][d])
 
 
     def generate_latest(self):
@@ -276,9 +274,10 @@ def get_authentication_token():
             for line in lines:
                 if line.startswith('WEBPASSWORD'):
                     token = line.split('=')[1]
+                    return token
+            return None
     except (FileNotFoundError):
         print("Unable to find: %s" % filename)
-    return token
 
 
 def main():

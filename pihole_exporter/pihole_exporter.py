@@ -165,9 +165,14 @@ class pihole_exporter:
             if not isinstance(overall_data_dict[key], dict):
                 overall_data_dict[key] = self.get_value(data_dict, key)
             else:
+                if not key in data_dict:
+                    data_dict = overall_data_dict
+                    for i in data_dict[key]:
+                        data_dict[key][i] = 0
+
                 overall_data_dict[key] = self.update_existing_metrics(
-                                                data_dict[key],
-                                                overall_data_dict[key])
+                                                    data_dict[key],
+                                                    overall_data_dict[key])
         return overall_data_dict
 
 

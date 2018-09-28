@@ -10,14 +10,60 @@ from io import StringIO
 from prometheus_client import Gauge, generate_latest
 from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
 
-class pihole_exporter:
+name = 'pihole_exporter'
+__VERSION__ = '0.4.4.dev0'
 
+class metric:
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+        self.metric = Gauge('sonarr_%s' % name.lower(), name.replace('_', ' '))
+        self.metric.set(value)
+
+    def update_value(self, value):
+        self.value = value
+        self.metric.set(value)
+
+
+class metric_label:
+    def __init__(self, name, label, value):
+        self.name = name
+        self.values = dict()
+        self.values[label] = value
+        self.label_values = list()
+        self.label_values.append(label)
+        self.metric = Gauge('sonarr_%s' % name.lower(), name.replace('_', ' '),
+                            [self.get_label(name)])
+        self.metric.labels(label).set(value)
+
+    @classmethod
+    def get_label(self, name):
+        if name in ['top_queries', 'top_ads', 'domain']:
+            return 'domain'
+        elif name in ['top_sources', 'all_queries', 'all_queries_blocked']:
+            return 'client'
+        elif name == 'forward_destinations':
+            return 'resolver'
+        elif name == 'query_type':
+            return 'type'
+
+    def update_value(self, value):
+        for label in value:
+            self.values[label] = value[label]
+            self.metric.labels(label).set(value[label])
+            if label not in self.label_values:
+                self.label_values.append(label)
+        for label in self.label_values:
+            if not label in value:
+                self.metric.labels(label).set(0)
+
+
+class pihole_exporter:
     class _SilentHandler(WSGIRequestHandler):
         """WSGI handler that does not log requests."""
 
         def log_message(self, format, *args):
             """Log nothing."""
-
 
     def __init__(self, url, auth):
         self.url = url
@@ -26,6 +72,7 @@ class pihole_exporter:
         self.metrics = dict()
         self.httpd = None
         self.metrics_data = dict()
+        self.metrics_class = dict()
 
         self.summary_raw_url = self.api_url + '?summaryRaw'
         self.top_item_url = self.api_url + '?topItems=100'
@@ -33,7 +80,6 @@ class pihole_exporter:
         self.forward_destinations_url = self.api_url + '?getForwardDestinations'
         self.query_types_url = self.api_url + '?getQueryTypes'
         self.get_all_queries_url = self.api_url + '?getAllQueries'
-
 
     def get_json(self, url):
         if self.auth:
@@ -45,227 +91,85 @@ class pihole_exporter:
         json_text = json.load(io)
         return json_text
 
+    def add_update_metric(self, name, value):
+        if not name in self.metrics_class:
+            self.metrics_class[name] = metric(name.replace('/', '_'), value)
+        else:
+            self.metrics_class[name].update_value(value)
+
+    def add_update_metric_label(self, name, value):
+        for label in value:
+            if not name in self.metrics_class:
+                self.metrics_class[name] = metric_label(
+                    name, label, value[label])
+            else:
+                self.metrics_class[name].update_value(value)
 
     def get_summary(self):
-
         summary_raw = self.get_json(self.summary_raw_url)
-        metrics_data = dict()
 
         for i in summary_raw:
             if i == "status":
                 if summary_raw[i] == 'enabled':
-                    metrics_data[i] = 1
+                    self.add_update_metric(i, 1)
                 else:
-                    metrics_data[i] = 0
+                    self.add_update_metric(i, 1)
             elif i == "gravity_last_updated":
-                metrics_data[i] = summary_raw[i]['absolute']
+                self.add_update_metric(i, summary_raw[i]['absolute'])
             else:
-                metrics_data[i] = summary_raw[i]
-        return metrics_data
-
-
-    @classmethod
-    def get_labels(self, names):
-        labels = list()
-        for name in names:
-            labels.append(self.get_label(name))
-        return labels
-
-
-    @classmethod
-    def get_label(self, name):
-        if name in [    'top_queries',
-                        'top_ads',
-                        'domain']:
-            return 'domain'
-        elif name in [  'top_sources',
-                        'all_queries',
-                        'all_queries_blocked']:
-            return 'client'
-        elif name == 'forward_destinations':
-            return 'resolver'
-        elif name == 'query_type':
-            return 'type'
-
-
-    @classmethod
-    def parse_client_metrics(self, client_metrics, hostname, domain):
-        if not hostname in client_metrics:
-            client_metrics[hostname] = dict()
-        if not domain in client_metrics[hostname]:
-            client_metrics[hostname][domain] = 1
-        else:
-            client_metrics[hostname][domain] += 1
-        return client_metrics
-
-
-    def get_all_queries_data(self):
-        aq = self.get_json(self.get_all_queries_url)
-        if aq:
-            client_metrics = dict()
-            clients_blocked_metrics = dict()
-            for i in aq['data']:
-                hostname = i[3]
-                domain = i[2]
-                answer_type = i[4]
-                client_metrics = self.parse_client_metrics(
-                                            client_metrics,
-                                            hostname,
-                                            domain)
-                if answer_type in ['1','4']:
-                    clients_blocked_metrics = self.parse_client_metrics(
-                                                clients_blocked_metrics,
-                                                hostname,
-                                                domain)
-        return client_metrics, clients_blocked_metrics
-
+                self.add_update_metric(i, summary_raw[i])
 
     def get_metrics(self):
-        metrics_data = self.get_summary()
+        metrics_data = dict()
+        self.get_summary()
 
         top_items = self.get_json(self.top_item_url)
         if top_items:
-            top_queries = top_items['top_queries']
-            metrics_data['top_queries'] = top_queries
-            top_ads = top_items['top_ads']
-            metrics_data['top_ads'] = top_ads
-
+            for item in top_items:
+                self.add_update_metric_label(item, top_items[item])
         top_sources = self.get_json(self.top_sources_url)
         if top_sources:
-            metrics_data['top_sources'] = top_sources['top_sources']
+            self.add_update_metric_label('top_sources',
+                                         top_sources['top_sources'])
 
         fw_dest = self.get_json(self.forward_destinations_url)
         if fw_dest:
-            fwd = fw_dest['forward_destinations']
-            metrics_data['forward_destinations'] = fwd
+            self.add_update_metric_label(
+                'forward_destinations', fw_dest['forward_destinations'])
 
         qt = self.get_json(self.query_types_url)
         if qt:
-            metrics_data['query_type'] = qt['querytypes']
-
-
-        metrics_data['all_queries'], metrics_data['all_queries_blocked'] = \
-            self.get_all_queries_data()
-        return metrics_data
-
-
-    @classmethod
-    def get_value(self, data_dict, value):
-        if value in data_dict:
-            return data_dict[value]
-        return 0
-
-
-    def update_existing_metrics(self, data_dict, overall_data_dict=None):
-
-        if overall_data_dict is None:
-            overall_data_dict = self.metrics_data
-
-        for key in overall_data_dict:
-            if not isinstance(overall_data_dict[key], dict):
-                overall_data_dict[key] = self.get_value(data_dict, key)
-            else:
-                if not key in data_dict:
-                    data_dict = overall_data_dict
-                    for i in data_dict[key]:
-                        data_dict[key][i] = 0
-
-                overall_data_dict[key] = self.update_existing_metrics(
-                                                    data_dict[key],
-                                                    overall_data_dict[key])
-        return overall_data_dict
-
-
-    def update_new_metrics(self, data_dict, overall_data_dict=None):
-
-        if overall_data_dict is None:
-            overall_data_dict = self.metrics_data
-
-        for key in data_dict:
-            if not key in overall_data_dict:
-                overall_data_dict[key] = data_dict[key]
-            else:
-                if isinstance(data_dict[key], dict):
-                    overall_data_dict[key] = self.update_new_metrics(
-                                                    data_dict[key],
-                                                    overall_data_dict[key])
-        return overall_data_dict
-
-
-    def update_metrics_data(self, metrics_data):
-        if len(self.metrics_data) == 0:
-            self.metrics_data = metrics_data
-        else:
-            self.metrics_data = self.update_existing_metrics(metrics_data)
-            self.metrics_data = self.update_new_metrics(metrics_data)
-
-    def update_metric(self, source):
-        self.add_metric(source)
-        self.metrics[source].set(
-            self.metrics_data[source])
-
-
-    def add_metric(self, source, label=None):
-        if not source in self.metrics:
-            if label is None:
-                self.metrics[source] = Gauge(
-                    'pihole_%s' % source.lower(),
-                    source.replace('_',' '))
-            else:
-                self.metrics[source] = Gauge(
-                'pihole_%s' % source,
-                source.replace('_', ' '),
-                label)
-
-
-    def update_metric_label(self, source):
-        for i in self.metrics_data[source]:
-            if not isinstance(self.metrics_data[source][i], dict):
-                self.add_metric(source, self.get_labels([source]))
-                self.metrics[source].labels(i).set(self.metrics_data[source][i])
-            else:
-                self.add_metric(source, self.get_labels([source, 'domain']))
-                for d in self.metrics_data[source][i]:
-                    self.metrics[source].labels(i, d).set(
-                        self.metrics_data[source][i][d])
+            self.add_update_metric_label('query_type', qt['querytypes'])
 
 
     def generate_latest(self):
         data = self.get_metrics()
-        self.update_metrics_data(data)
-
-        for source in self.metrics_data:
-            if not isinstance(self.metrics_data[source], dict):
-                self.update_metric(source)
-            else:
-                self.update_metric_label(source)
         return generate_latest()
 
-
     def make_prometheus_app(self):
-
         def prometheus_app(environ, start_response):
             output = self.generate_latest()
             status = str('200 OK')
             headers = [(str('Content-type'), str('text/plain'))]
             start_response(status, headers)
             return [output]
-        return prometheus_app
 
+        return prometheus_app
 
     def make_server(self, interface, port):
         server_class = WSGIServer
 
         if ':' in interface:
             if getattr(server_class, 'address_family') == socket.AF_INET:
-                    server_class.address_family = socket.AF_INET6
+                server_class.address_family = socket.AF_INET6
 
         print("* Listening on %s:%s" % (interface, port))
-        self.httpd = make_server(   interface,
-                                    port,
-                                    self.make_prometheus_app(),
-                                    server_class=server_class,
-                                    handler_class=self._SilentHandler)
+        self.httpd = make_server(
+            interface,
+            port,
+            self.make_prometheus_app(),
+            server_class=server_class,
+            handler_class=self._SilentHandler)
         t = threading.Thread(target=self.httpd.serve_forever)
         t.start()
 
@@ -286,26 +190,27 @@ def get_authentication_token():
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='pihole_exporter')
-    parser.add_argument('-o', '--pihole',
-        help='pihole adress',
-        default='pi.hole')
-    parser.add_argument('-p', '--port', type=int,
+    parser = argparse.ArgumentParser(description='pihole_exporter')
+    parser.add_argument(
+        '-o', '--pihole', help='pihole adress', default='pi.hole')
+    parser.add_argument(
+        '-p',
+        '--port',
+        type=int,
         help='port pihole_exporter is listening on',
         default=9311)
-    parser.add_argument('-i', '--interface',
+    parser.add_argument(
+        '-i',
+        '--interface',
         help='interface pihole_exporter will listen on',
         default='0.0.0.0')
-    parser.add_argument('-a', '--auth',
-        help='Pihole password hash',
-        default=None)
+    parser.add_argument(
+        '-a', '--auth', help='Pihole password hash', default=None)
     args = parser.parse_args()
 
     auth_token = args.auth
     if auth_token == None:
         auth_token = get_authentication_token()
-
 
     exporter = pihole_exporter(args.pihole, auth_token)
     exporter.make_server(args.interface, args.port)

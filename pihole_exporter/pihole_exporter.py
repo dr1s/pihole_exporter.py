@@ -36,7 +36,7 @@ class metric_label:
         self.label_values.append(label)
         self.metric = Gauge('pihole_%s' % name.lower(), name.replace('_', ' '),
                             [self.get_label(name)])
-        self.metric.labels(label).set(value)
+        self.metric.labels(label).set(value[label])
 
     @classmethod
     def get_label(self, name):

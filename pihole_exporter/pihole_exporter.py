@@ -18,7 +18,7 @@ class metric:
     def __init__(self, name, value):
         self.name = name
         self.value = value
-        self.metric = Gauge('sonarr_%s' % name.lower(), name.replace('_', ' '))
+        self.metric = Gauge('pihole_%s' % name.lower(), name.replace('_', ' '))
         self.metric.set(value)
 
     def update_value(self, value):
@@ -33,7 +33,7 @@ class metric_label:
         self.values[label] = value
         self.label_values = list()
         self.label_values.append(label)
-        self.metric = Gauge('sonarr_%s' % name.lower(), name.replace('_', ' '),
+        self.metric = Gauge('pihole_%s' % name.lower(), name.replace('_', ' '),
                             [self.get_label(name)])
         self.metric.labels(label).set(value)
 

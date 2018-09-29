@@ -124,7 +124,6 @@ class pihole_exporter:
                 self.add_update_metric_label(item, top_items[item])
         top_sources = self.get_json(self.top_sources_url)
         if top_sources:
-            print(top_sources)
             self.add_update_metric_label('top_sources',
                                          top_sources['top_sources'])
 

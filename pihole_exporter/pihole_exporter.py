@@ -11,7 +11,7 @@ from prometheus_client import Gauge, generate_latest
 from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
 
 name = 'pihole_exporter'
-__VERSION__ = '0.4.4.dev0'
+__VERSION__ = '0.4.4'
 
 
 class metric:

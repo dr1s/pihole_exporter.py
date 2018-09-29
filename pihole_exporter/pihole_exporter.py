@@ -98,7 +98,7 @@ class pihole_exporter:
     def add_update_metric_label(self, name, value):
         if not name in self.metrics:
             label = [*value.keys()][0]
-            self.metrics[name] = metric_label(name, value[label], value[label])
+            self.metrics[name] = metric_label(name, label, value[label])
         self.metrics[name].update_value(value)
 
     def get_summary(self):
@@ -124,6 +124,7 @@ class pihole_exporter:
                 self.add_update_metric_label(item, top_items[item])
         top_sources = self.get_json(self.top_sources_url)
         if top_sources:
+            print(top_sources)
             self.add_update_metric_label('top_sources',
                                          top_sources['top_sources'])
 

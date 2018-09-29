@@ -27,10 +27,11 @@ class metric:
 
 
 class metric_label:
-    def __init__(self, name, label, value):
+    def __init__(self, name, value):
         self.name = name
+        label = [*value.keys()][0]
         self.values = dict()
-        self.values[label] = value
+        self.values[label] = value[label]
         self.label_values = list()
         self.label_values.append(label)
         self.metric = Gauge('pihole_%s' % name.lower(), name.replace('_', ' '),
@@ -97,8 +98,7 @@ class pihole_exporter:
 
     def add_update_metric_label(self, name, value):
         if not name in self.metrics:
-            label = [*value.keys()][0]
-            self.metrics[name] = metric_label(name, label, value[label])
+            self.metrics[name] = metric_label(name, value)
         self.metrics[name].update_value(value)
 
     def get_summary(self):

@@ -13,6 +13,7 @@ from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
 name = 'pihole_exporter'
 __VERSION__ = '0.4.4.dev0'
 
+
 class metric:
     def __init__(self, name, value):
         self.name = name
@@ -71,8 +72,6 @@ class pihole_exporter:
         self.api_url = 'http://%s/admin/api.php' % self.url
         self.metrics = dict()
         self.httpd = None
-        self.metrics_data = dict()
-        self.metrics_class = dict()
 
         self.summary_raw_url = self.api_url + '?summaryRaw'
         self.top_item_url = self.api_url + '?topItems=100'
@@ -92,18 +91,15 @@ class pihole_exporter:
         return json_text
 
     def add_update_metric(self, name, value):
-        if not name in self.metrics_class:
-            self.metrics_class[name] = metric(name.replace('/', '_'), value)
-        else:
-            self.metrics_class[name].update_value(value)
+        if not name in self.metrics:
+            self.metrics[name] = metric(name, value)
+        self.metrics[name].update_value(value)
 
     def add_update_metric_label(self, name, value):
-        for label in value:
-            if not name in self.metrics_class:
-                self.metrics_class[name] = metric_label(
-                    name, label, value[label])
-            else:
-                self.metrics_class[name].update_value(value)
+        if not name in self.metrics:
+            label = [*value.keys()][0]
+            self.metrics[name] = metric_label(name, value[label], value[label])
+        self.metrics[name].update_value(value)
 
     def get_summary(self):
         summary_raw = self.get_json(self.summary_raw_url)
@@ -134,13 +130,12 @@ class pihole_exporter:
 
         fw_dest = self.get_json(self.forward_destinations_url)
         if fw_dest:
-            self.add_update_metric_label(
-                'forward_destinations', fw_dest['forward_destinations'])
+            self.add_update_metric_label('forward_destinations',
+                                         fw_dest['forward_destinations'])
 
         qt = self.get_json(self.query_types_url)
         if qt:
             self.add_update_metric_label('query_type', qt['querytypes'])
-
 
     def generate_latest(self):
         data = self.get_metrics()

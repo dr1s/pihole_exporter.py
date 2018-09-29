@@ -115,8 +115,7 @@ class pihole_exporter:
             else:
                 self.add_update_metric(i, summary_raw[i])
 
-    def get_metrics(self):
-        metrics_data = dict()
+    def generate_latest(self):
         self.get_summary()
 
         top_items = self.get_json(self.top_item_url)
@@ -136,9 +135,6 @@ class pihole_exporter:
         qt = self.get_json(self.query_types_url)
         if qt:
             self.add_update_metric_label('query_type', qt['querytypes'])
-
-    def generate_latest(self):
-        data = self.get_metrics()
         return generate_latest()
 
     def make_prometheus_app(self):

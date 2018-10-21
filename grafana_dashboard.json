@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 9,
-  "iteration": 1540130219087,
+  "iteration": 1540136114614,
   "links": [],
   "panels": [
     {
@@ -716,6 +716,8 @@
         "min": false,
         "rightSide": true,
         "show": true,
+        "sort": "current",
+        "sortDesc": true,
         "total": false,
         "values": true
       },
@@ -733,7 +735,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "pihole_top_sources",
+          "expr": "topk($top, pihole_top_sources)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{client}}",
@@ -808,6 +810,8 @@
         "min": false,
         "rightSide": true,
         "show": true,
+        "sort": "current",
+        "sortDesc": true,
         "total": false,
         "values": true
       },
@@ -825,7 +829,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "pihole_top_queries",
+          "expr": "topk($top, pihole_top_queries)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{domain}}",
@@ -900,6 +904,8 @@
         "min": false,
         "rightSide": true,
         "show": true,
+        "sort": "current",
+        "sortDesc": true,
         "total": false,
         "values": true
       },
@@ -917,7 +923,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "pihole_top_ads",
+          "expr": "topk($top, pihole_top_ads)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{domain}}",
@@ -1245,7 +1251,7 @@
       }
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1253,103 +1259,105 @@
         "y": 46
       },
       "id": 24,
-      "panels": [],
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "gridPos": {
+            "h": 9,
+            "w": 24,
+            "x": 0,
+            "y": 47
+          },
+          "id": 26,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": true,
+            "max": true,
+            "min": true,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "repeat": "client",
+          "repeatDirection": "v",
+          "scopedVars": {
+            "client": {
+              "selected": true,
+              "text": "rpi2",
+              "value": "rpi2"
+            }
+          },
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "topk($top, sum(pihole_client_queries{hostname=~\"$client\"}) by (domain))",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "{{ domain }}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "$client",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        }
+      ],
       "title": "Clients",
       "type": "row"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "fill": 1,
-      "gridPos": {
-        "h": 9,
-        "w": 24,
-        "x": 0,
-        "y": 47
-      },
-      "id": 26,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": true,
-        "show": true,
-        "total": true,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "repeat": "client",
-      "repeatDirection": "v",
-      "scopedVars": {
-        "client": {
-          "selected": true,
-          "text": "localhost",
-          "value": "localhost"
-        }
-      },
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "sum(pihole_client_queries{hostname=~\"$client\"}) by (domain)",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "{{ domain }}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "$client",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
     }
   ],
   "refresh": "1m",
@@ -1364,9 +1372,9 @@
       {
         "allValue": null,
         "current": {
-          "text": "localhost",
+          "text": "rpi2",
           "value": [
-            "localhost"
+            "rpi2"
           ]
         },
         "datasource": "Prometheus",
@@ -1385,11 +1393,58 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "tags": [],
+          "text": "5",
+          "value": "5"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Top",
+        "multi": false,
+        "name": "top",
+        "options": [
+          {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": true,
+            "text": "5",
+            "value": "5"
+          },
+          {
+            "selected": false,
+            "text": "10",
+            "value": "10"
+          },
+          {
+            "selected": false,
+            "text": "15",
+            "value": "15"
+          },
+          {
+            "selected": false,
+            "text": "20",
+            "value": "20"
+          },
+          {
+            "selected": false,
+            "text": "25",
+            "value": "25"
+          }
+        ],
+        "query": "5,10,15,20,25",
+        "type": "custom"
       }
     ]
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {
@@ -1420,5 +1475,5 @@
   "timezone": "browser",
   "title": "Pi Hole",
   "uid": "000000009",
-  "version": 21
+  "version": 24
 }

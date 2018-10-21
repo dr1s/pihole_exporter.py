@@ -70,11 +70,11 @@ class metric_labels:
         self.update_value(values)
 
     def zero_missing_value(self, values, key):
-        for label in values:
-            if not isinstance(values[label], list):
-                values[label] = 0
-            else:
+        if isinstance(values, dict):
+            for label in values:
                 values[label] = self.zero_missing_value(values[label], label)
+        else:
+            values = 0
         return values
 
     def update_old_values(self, old_values, values):

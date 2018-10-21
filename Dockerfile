@@ -1,5 +1,4 @@
 FROM alpine:3.8
-MAINTAINER dr1s
 
 RUN apk add --no-cache python3 && \
     pip3 install --upgrade pip setuptools && \

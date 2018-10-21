@@ -11,7 +11,7 @@ from prometheus_client import Gauge, generate_latest
 from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
 
 name = 'pihole_exporter'
-__VERSION__ = '0.4.4'
+__VERSION__ = '0.4.5.dev0'
 
 
 class metric:
@@ -40,9 +40,9 @@ class metric_label:
 
     @classmethod
     def get_label(self, name):
-        if name in ['top_queries', 'top_ads', 'domain']:
+        if name in ['top_queries', 'top_ads']:
             return 'domain'
-        elif name in ['top_sources', 'all_queries', 'all_queries_blocked']:
+        elif name == 'top_sources':
             return 'client'
         elif name == 'forward_destinations':
             return 'resolver'
@@ -60,6 +60,69 @@ class metric_label:
                 self.metric.labels(label).set(0)
 
 
+class metric_labels:
+    def __init__(self, name, labels, values):
+        self.name = name
+        self.values = values
+        self.labels = labels
+        self.metric = Gauge('pihole_%s' % name.lower(), name.replace('_', ' '),
+                            labels)
+        self.update_value(values)
+
+    def zero_missing_value(self, values, key):
+        for label in values:
+            if not isinstance(values[label], list):
+                values[label] = 0
+            else:
+                values[label] = self.zero_missing_value(values[label], label)
+        return values
+
+    def update_old_values(self, old_values, values):
+
+        for label in old_values:
+            if not label in values:
+                old_values[label] = self.zero_missing_value(label)
+            else:
+                if isinstance(old_values[label], dict):
+                    old_values[label] = self.update_old_values(
+                        old_values[label], values[label])
+        return old_values
+
+    def add_new_values(self, old_values, values):
+
+        for label in values:
+            if not isinstance(values[label], dict):
+                old_values[label] = values[label]
+            else:
+                old_values[label] = self.add_new_values(
+                    old_values[label], values[label])
+
+        return old_values
+
+    def update_metrics(self, values, labels=[]):
+
+        for label in values:
+            labels_tmp = list()
+            for i in labels:
+                labels_tmp.append(i)
+            labels_tmp.append(label)
+
+            if not isinstance(values[label], dict):
+
+                self.metric.labels(*labels_tmp).set(values[label])
+                labels_tmp.pop()
+            else:
+                labels.append(label)
+                self.update_metrics(values[label], labels)
+                labels.pop()
+
+    def update_value(self, values):
+        values_tmp = self.values
+        values_tmp = self.add_new_values(values_tmp, values)
+        values_tmp = self.update_old_values(values_tmp, values)
+        self.update_metrics(values_tmp)
+
+
 class pihole_exporter:
     class _SilentHandler(WSGIRequestHandler):
         """WSGI handler that does not log requests."""
@@ -67,12 +130,13 @@ class pihole_exporter:
         def log_message(self, format, *args):
             """Log nothing."""
 
-    def __init__(self, url, auth):
+    def __init__(self, url, auth, extended=False):
         self.url = url
         self.auth = auth
         self.api_url = 'http://%s/admin/api.php' % self.url
         self.metrics = dict()
         self.httpd = None
+        self.extended = extended
 
         self.summary_raw_url = self.api_url + '?summaryRaw'
         self.top_item_url = self.api_url + '?topItems=100'
@@ -101,6 +165,11 @@ class pihole_exporter:
             self.metrics[name] = metric_label(name, value)
         self.metrics[name].update_value(value)
 
+    def add_update_metric_labels(self, name, labels, value):
+        if not name in self.metrics:
+            self.metrics[name] = metric_labels(name, labels, value)
+        self.metrics[name].update_value(value)
+
     def get_summary(self):
         summary_raw = self.get_json(self.summary_raw_url)
 
@@ -114,6 +183,26 @@ class pihole_exporter:
                 self.add_update_metric(i, summary_raw[i]['absolute'])
             else:
                 self.add_update_metric(i, summary_raw[i])
+
+    def get_exteneded_metrics(self):
+        aq = self.get_json(self.get_all_queries_url)
+        if aq:
+            client_data = dict()
+            for i in aq['data']:
+                hostname = i[3]
+                domain = i[2]
+                answer_type = i[4]
+                if not hostname in client_data:
+                    client_data[hostname] = dict()
+                if not domain in client_data[hostname]:
+                    client_data[hostname][domain] = dict()
+                if not answer_type in client_data[hostname][domain]:
+                    client_data[hostname][domain][answer_type] = 1
+                else:
+                    client_data[hostname][domain][answer_type] += 1
+            self.add_update_metric_labels(
+                'client_queries', ['hostname', 'domain', 'answer_type'],
+                client_data)
 
     def generate_latest(self):
         self.get_summary()
@@ -135,6 +224,10 @@ class pihole_exporter:
         qt = self.get_json(self.query_types_url)
         if qt:
             self.add_update_metric_label('query_type', qt['querytypes'])
+
+        if self.extended:
+            self.get_exteneded_metrics()
+
         return generate_latest()
 
     def make_prometheus_app(self):
@@ -197,13 +290,19 @@ def main():
         default='0.0.0.0')
     parser.add_argument(
         '-a', '--auth', help='Pihole password hash', default=None)
+    parser.add_argument(
+        '-e',
+        '--extended-metrics',
+        help="Extended pihole metrics",
+        action='store_true',
+        default=False)
     args = parser.parse_args()
 
     auth_token = args.auth
     if auth_token == None:
         auth_token = get_authentication_token()
 
-    exporter = pihole_exporter(args.pihole, auth_token)
+    exporter = pihole_exporter(args.pihole, auth_token, args.extended_metrics)
     exporter.make_server(args.interface, args.port)
 
 

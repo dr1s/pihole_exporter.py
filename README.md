@@ -130,17 +130,20 @@ Some metrics have been redacted.
 
 # Usage
 	usage: pihole_exporter.py [-h] [-o PIHOLE] [-p PORT] [-i INTERFACE] [-a AUTH]
+	                          [-e]
 
 	pihole_exporter
 
 	optional arguments:
-	-h, --help            show this help message and exit
-	-o PIHOLE, --pihole PIHOLE
-											pihole adress
-	-p PORT, --port PORT  port pihole_exporter is listening on
-	-i INTERFACE, --interface INTERFACE
-									interface pihole_exporter will listen on
-	-a AUTH, --auth AUTH  Pihole password hash
+	  -h, --help            show this help message and exit
+	  -o PIHOLE, --pihole PIHOLE
+	                        pihole adress
+	  -p PORT, --port PORT  port pihole_exporter is listening on
+	  -i INTERFACE, --interface INTERFACE
+	                        interface pihole_exporter will listen on
+	  -a AUTH, --auth AUTH  Pihole password hash
+	  -e, --extended-metrics
+	                        Extended pihole metrics
 
 ## Usage Example
 

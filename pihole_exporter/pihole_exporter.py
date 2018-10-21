@@ -94,8 +94,11 @@ class metric_labels:
             if not isinstance(values[label], dict):
                 old_values[label] = values[label]
             else:
-                old_values[label] = self.add_new_values(
-                    old_values[label], values[label])
+                if label in old_values:
+                    old_values[label] = self.add_new_values(
+                        old_values[label], values[label])
+                else:
+                    old_values[label] = values[label]                 
 
         return old_values
 

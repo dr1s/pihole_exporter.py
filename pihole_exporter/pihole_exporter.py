@@ -81,7 +81,7 @@ class metric_labels:
 
         for label in old_values:
             if not label in values:
-                old_values[label] = self.zero_missing_value(label)
+                old_values[label] = self.zero_missing_value(old_values[label], label)
             else:
                 if isinstance(old_values[label], dict):
                     old_values[label] = self.update_old_values(
@@ -98,7 +98,7 @@ class metric_labels:
                     old_values[label] = self.add_new_values(
                         old_values[label], values[label])
                 else:
-                    old_values[label] = values[label]                 
+                    old_values[label] = values[label]
 
         return old_values
 

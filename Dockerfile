@@ -2,16 +2,16 @@ FROM alpine:3.8
 
 RUN apk add --no-cache python3 && \
     pip3 install --upgrade pip setuptools && \
-    pip3 install virtualenv
+    pip3 install pipenv
 
-WORKDIR /pihole_exporter
+WORKDIR /exporter
 
-COPY . /pihole_exporter
+COPY pihole_exporter/pihole_exporter.py pihole_exporter.py
+COPY Pipfile Pipfile
+COPY Pipfile.lock Pipfile.lock
 
-RUN virtualenv -p python3 /env && \
-    /env/bin/python3 setup.py install && \
-    rm -rf /pihole_exporter
+RUN set -ex && pipenv install --deploy --system
 
 EXPOSE 9311
 
-ENTRYPOINT ["/env/bin/pihole_exporter"]
+ENTRYPOINT python3 pihole_exporter.py

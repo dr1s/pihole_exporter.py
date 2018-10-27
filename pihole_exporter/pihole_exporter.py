@@ -11,7 +11,7 @@ from prometheus_client import Gauge, generate_latest
 from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
 
 name = 'pihole_exporter'
-__VERSION__ = '0.4.5'
+__VERSION__ = '0.4.5.1'
 
 
 class metric:
@@ -81,7 +81,8 @@ class metric_labels:
 
         for label in old_values:
             if not label in values:
-                old_values[label] = self.zero_missing_value(old_values[label], label)
+                old_values[label] = self.zero_missing_value(
+                    old_values[label], label)
             else:
                 if isinstance(old_values[label], dict):
                     old_values[label] = self.update_old_values(
@@ -111,13 +112,10 @@ class metric_labels:
             labels_tmp.append(label)
 
             if not isinstance(values[label], dict):
-
                 self.metric.labels(*labels_tmp).set(values[label])
                 labels_tmp.pop()
             else:
-                labels.append(label)
-                self.update_metrics(values[label], labels)
-                labels.pop()
+                self.update_metrics(values[label], labels_tmp)
 
     def update_value(self, values):
         values_tmp = self.values

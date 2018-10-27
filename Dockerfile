@@ -1,6 +1,6 @@
-FROM dr1s/exporter_base:latest
+FROM dr1s/pipenv-alpine:3.8-python3.6
 
-COPY pihole_exporter/pihole_exporter.py exporter/
+COPY pihole_exporter/pihole_exporter.py /app
 
 EXPOSE 9311
 

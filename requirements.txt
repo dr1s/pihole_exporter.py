@@ -1,1 +1,1 @@
-prometheus_client
+prometheus_metrics>=0.1.3

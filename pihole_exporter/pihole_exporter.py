@@ -1,42 +1,49 @@
 #!/usr/bin/env python3
 
+#
+#   Copyright (c) 2018 Daniel Schmitz
+#
+#   Permission is hereby granted, free of charge, to any person obtaining a copy
+#   of this software and associated documentation files (the "Software"), to deal
+#   in the Software without restriction, including without limitation the rights
+#   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#   copies of the Software, and to permit persons to whom the Software is
+#   furnished to do so, subject to the following conditions:
+#
+#   The above copyright notice and this permission notice shall be included in all
+#   copies or substantial portions of the Software.
+#
+#   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#   SOFTWARE.
+
 import json
 import argparse
 import urllib.request
-import threading
 import socket
 
 from io import StringIO
-from prometheus_client import Gauge, generate_latest
-from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
+from prometheus_metrics import exporter, generate_latest
 
-name = 'pihole_exporter'
-__VERSION__ = '0.4.5.1'
+class pihole_exporter(exporter):
+    def __init__(self, url, auth, extended=False):
+        super().__init__()
+        self.url = url
+        self.auth = auth
+        self.api_url = 'http://%s/admin/api.php' % self.url
+        self.httpd = None
+        self.extended = extended
 
-
-class metric:
-    def __init__(self, name, value):
-        self.name = name
-        self.value = value
-        self.metric = Gauge('pihole_%s' % name.lower(), name.replace('_', ' '))
-        self.metric.set(value)
-
-    def update_value(self, value):
-        self.value = value
-        self.metric.set(value)
-
-
-class metric_label:
-    def __init__(self, name, value):
-        self.name = name
-        label = [*value.keys()][0]
-        self.values = dict()
-        self.values[label] = value[label]
-        self.label_values = list()
-        self.label_values.append(label)
-        self.metric = Gauge('pihole_%s' % name.lower(), name.replace('_', ' '),
-                            [self.get_label(name)])
-        self.metric.labels(label).set(value[label])
+        self.summary_raw_url = self.api_url + '?summaryRaw'
+        self.top_item_url = self.api_url + '?topItems=100'
+        self.top_sources_url = self.api_url + '?getQuerySources=100'
+        self.forward_destinations_url = self.api_url + '?getForwardDestinations'
+        self.query_types_url = self.api_url + '?getQueryTypes'
+        self.get_all_queries_url = self.api_url + '?getAllQueries'
 
     @classmethod
     def get_label(self, name):
@@ -49,103 +56,6 @@ class metric_label:
         elif name == 'query_type':
             return 'type'
 
-    def update_value(self, value):
-        for label in value:
-            self.values[label] = value[label]
-            self.metric.labels(label).set(value[label])
-            if label not in self.label_values:
-                self.label_values.append(label)
-        for label in self.label_values:
-            if not label in value:
-                self.metric.labels(label).set(0)
-
-
-class metric_labels:
-    def __init__(self, name, labels, values):
-        self.name = name
-        self.values = values
-        self.labels = labels
-        self.metric = Gauge('pihole_%s' % name.lower(), name.replace('_', ' '),
-                            labels)
-        self.update_value(values)
-
-    def zero_missing_value(self, values, key):
-        if isinstance(values, dict):
-            for label in values:
-                values[label] = self.zero_missing_value(values[label], label)
-        else:
-            values = 0
-        return values
-
-    def update_old_values(self, old_values, values):
-
-        for label in old_values:
-            if not label in values:
-                old_values[label] = self.zero_missing_value(
-                    old_values[label], label)
-            else:
-                if isinstance(old_values[label], dict):
-                    old_values[label] = self.update_old_values(
-                        old_values[label], values[label])
-        return old_values
-
-    def add_new_values(self, old_values, values):
-
-        for label in values:
-            if not isinstance(values[label], dict):
-                old_values[label] = values[label]
-            else:
-                if label in old_values:
-                    old_values[label] = self.add_new_values(
-                        old_values[label], values[label])
-                else:
-                    old_values[label] = values[label]
-
-        return old_values
-
-    def update_metrics(self, values, labels=[]):
-
-        for label in values:
-            labels_tmp = list()
-            for i in labels:
-                labels_tmp.append(i)
-            labels_tmp.append(label)
-
-            if not isinstance(values[label], dict):
-                self.metric.labels(*labels_tmp).set(values[label])
-                labels_tmp.pop()
-            else:
-                self.update_metrics(values[label], labels_tmp)
-
-    def update_value(self, values):
-        values_tmp = self.values
-        values_tmp = self.add_new_values(values_tmp, values)
-        values_tmp = self.update_old_values(values_tmp, values)
-        self.update_metrics(values_tmp)
-
-
-class pihole_exporter:
-    class _SilentHandler(WSGIRequestHandler):
-        """WSGI handler that does not log requests."""
-
-        def log_message(self, format, *args):
-            """Log nothing."""
-
-    def __init__(self, url, auth, extended=False):
-        self.url = url
-        self.auth = auth
-        self.api_url = 'http://%s/admin/api.php' % self.url
-        self.metrics = dict()
-        self.httpd = None
-        self.extended = extended
-
-        self.summary_raw_url = self.api_url + '?summaryRaw'
-        self.top_item_url = self.api_url + '?topItems=100'
-        self.top_sources_url = self.api_url + '?getQuerySources=100'
-        self.forward_destinations_url = self.api_url + '?getForwardDestinations'
-        self.query_types_url = self.api_url + '?getQueryTypes'
-        self.get_all_queries_url = self.api_url + '?getAllQueries'
-
     def get_json(self, url):
         if self.auth:
             url += "&auth=%s" % self.auth
@@ -156,34 +66,20 @@ class pihole_exporter:
         json_text = json.load(io)
         return json_text
 
-    def add_update_metric(self, name, value):
-        if not name in self.metrics:
-            self.metrics[name] = metric(name, value)
-        self.metrics[name].update_value(value)
-
-    def add_update_metric_label(self, name, value):
-        if not name in self.metrics:
-            self.metrics[name] = metric_label(name, value)
-        self.metrics[name].update_value(value)
-
-    def add_update_metric_labels(self, name, labels, value):
-        if not name in self.metrics:
-            self.metrics[name] = metric_labels(name, labels, value)
-        self.metrics[name].update_value(value)
-
     def get_summary(self):
         summary_raw = self.get_json(self.summary_raw_url)
 
         for i in summary_raw:
             if i == "status":
                 if summary_raw[i] == 'enabled':
-                    self.add_update_metric(i, 1)
+                    self.metrics_handler.add_update_metric(i, 1)
                 else:
-                    self.add_update_metric(i, 1)
+                    self.metrics_handler.add_update_metric(i, 1)
             elif i == "gravity_last_updated":
-                self.add_update_metric(i, summary_raw[i]['absolute'])
+                self.metrics_handler.add_update_metric(
+                    i, summary_raw[i]['absolute'])
             else:
-                self.add_update_metric(i, summary_raw[i])
+                self.metrics_handler.add_update_metric(i, summary_raw[i])
 
     def get_exteneded_metrics(self):
         aq = self.get_json(self.get_all_queries_url)
@@ -201,7 +97,7 @@ class pihole_exporter:
                     client_data[hostname][domain][answer_type] = 1
                 else:
                     client_data[hostname][domain][answer_type] += 1
-            self.add_update_metric_labels(
+            self.metrics_handler.add_update_metric_labels(
                 'client_queries', ['hostname', 'domain', 'answer_type'],
                 client_data)
 
@@ -211,27 +107,31 @@ class pihole_exporter:
         top_items = self.get_json(self.top_item_url)
         if top_items:
             for item in top_items:
-                self.add_update_metric_label(item, top_items[item])
+                self.metrics_handler.add_update_metric_label(
+                    item, self.get_label(item), top_items[item])
         top_sources = self.get_json(self.top_sources_url)
         if top_sources:
-            self.add_update_metric_label('top_sources',
-                                         top_sources['top_sources'])
+            self.metrics_handler.add_update_metric_label(
+                'top_sources', self.get_label(item),
+                top_sources['top_sources'])
 
         fw_dest = self.get_json(self.forward_destinations_url)
         if fw_dest:
-            self.add_update_metric_label('forward_destinations',
-                                         fw_dest['forward_destinations'])
+            self.metrics_handler.add_update_metric_label(
+                'forward_destinations', self.get_label(item),
+                fw_dest['forward_destinations'])
 
         qt = self.get_json(self.query_types_url)
         if qt:
-            self.add_update_metric_label('query_type', qt['querytypes'])
+            self.metrics_handler.add_update_metric_label(
+                'query_type', self.get_label(item), qt['querytypes'])
 
         if self.extended:
             self.get_exteneded_metrics()
 
         return generate_latest()
 
-    def make_prometheus_app(self):
+    def make_wsgi_app(self):
         def prometheus_app(environ, start_response):
             output = self.generate_latest()
             status = str('200 OK')
@@ -240,23 +140,6 @@ class pihole_exporter:
             return [output]
 
         return prometheus_app
-
-    def make_server(self, interface, port):
-        server_class = WSGIServer
-
-        if ':' in interface:
-            if getattr(server_class, 'address_family') == socket.AF_INET:
-                server_class.address_family = socket.AF_INET6
-
-        print("* Listening on %s:%s" % (interface, port))
-        self.httpd = make_server(
-            interface,
-            port,
-            self.make_prometheus_app(),
-            server_class=server_class,
-            handler_class=self._SilentHandler)
-        t = threading.Thread(target=self.httpd.serve_forever)
-        t.start()
 
 
 def get_authentication_token():

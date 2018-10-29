@@ -29,6 +29,7 @@ import socket
 from io import StringIO
 from prometheus_metrics import exporter, generate_latest
 
+
 class pihole_exporter(exporter):
     def __init__(self, url, auth, extended=False):
         super().__init__()
@@ -72,14 +73,15 @@ class pihole_exporter(exporter):
         for i in summary_raw:
             if i == "status":
                 if summary_raw[i] == 'enabled':
-                    self.metrics_handler.add_update_metric(i, 1)
+                    self.metrics_handler.add_update('pihole_%s' % i, 1)
                 else:
-                    self.metrics_handler.add_update_metric(i, 1)
+                    self.metrics_handler.add_update('pihole_%s' % i, 0)
             elif i == "gravity_last_updated":
-                self.metrics_handler.add_update_metric(
-                    i, summary_raw[i]['absolute'])
+                self.metrics_handler.add_update('pihole_%s' % i,
+                                                summary_raw[i]['absolute'])
             else:
-                self.metrics_handler.add_update_metric(i, summary_raw[i])
+                self.metrics_handler.add_update('pihole_%s' % i,
+                                                summary_raw[i])
 
     def get_exteneded_metrics(self):
         aq = self.get_json(self.get_all_queries_url)
@@ -97,9 +99,9 @@ class pihole_exporter(exporter):
                     client_data[hostname][domain][answer_type] = 1
                 else:
                     client_data[hostname][domain][answer_type] += 1
-            self.metrics_handler.add_update_metric_labels(
-                'client_queries', ['hostname', 'domain', 'answer_type'],
-                client_data)
+            self.metrics_handler.add_update(
+                'pihole_client_queries', client_data,
+                ['hostname', 'domain', 'answer_type'])
 
     def generate_latest(self):
         self.get_summary()
@@ -107,24 +109,28 @@ class pihole_exporter(exporter):
         top_items = self.get_json(self.top_item_url)
         if top_items:
             for item in top_items:
-                self.metrics_handler.add_update_metric_label(
-                    item, self.get_label(item), top_items[item])
+                self.metrics_handler.add_update(
+                    item,
+                    top_items[item],
+                    self.get_label(item),
+                )
         top_sources = self.get_json(self.top_sources_url)
         if top_sources:
-            self.metrics_handler.add_update_metric_label(
-                'top_sources', self.get_label(item),
-                top_sources['top_sources'])
+            self.metrics_handler.add_update('pihole_top_sources',
+                                            top_sources['top_sources'],
+                                            self.get_label(item))
 
         fw_dest = self.get_json(self.forward_destinations_url)
         if fw_dest:
-            self.metrics_handler.add_update_metric_label(
-                'forward_destinations', self.get_label(item),
-                fw_dest['forward_destinations'])
+            self.metrics_handler.add_update('pihole_forward_destinations',
+                                            fw_dest['forward_destinations'],
+                                            self.get_label(item))
 
         qt = self.get_json(self.query_types_url)
         if qt:
-            self.metrics_handler.add_update_metric_label(
-                'query_type', self.get_label(item), qt['querytypes'])
+            self.metrics_handler.add_update('pihole_query_type',
+                                            qt['querytypes'],
+                                            self.get_label(item))
 
         if self.extended:
             self.get_exteneded_metrics()

@@ -22,7 +22,7 @@
 from pihole_exporter import main
 
 __NAME__ = 'pihole_exporter'
-__VERSION__ = '0.4.6.2'
+__VERSION__ = '0.4.6.3.dev0'
 __AUTHOR__ = 'Daniel Schmitz'
 
 if __name__ == '__main__':

@@ -19,10 +19,10 @@
 #   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #   SOFTWARE.
 
-from pihole_exporter import main
+from pihole_exporter.pihole_exporter import main
 
 __NAME__ = 'pihole_exporter'
-__VERSION__ = '0.4.6.3.dev0'
+__VERSION__ = '0.4.6.3'
 __AUTHOR__ = 'Daniel Schmitz'
 
 if __name__ == '__main__':

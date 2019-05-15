@@ -50,7 +50,8 @@ class pihole_exporter(exporter):
         self.metrics_handler.add('pihole_top_ads', 'domain')
         self.metrics_handler.add('pihole_forward_destinations', 'resolver')
         self.metrics_handler.add('pihole_query_type', 'query_type')
-        self.metrics_handler.add('pihole_client_queries', ['hostname', 'domain', 'answer_type'])
+        self.metrics_handler.add('pihole_client_queries',
+                                 ['hostname', 'domain', 'answer_type'])
 
     def get_json(self, url):
         if self.auth:
@@ -94,8 +95,7 @@ class pihole_exporter(exporter):
                     client_data[hostname][domain][answer_type] = 1
                 else:
                     client_data[hostname][domain][answer_type] += 1
-            self.metrics_handler.update(
-                'pihole_client_queries', client_data)
+            self.metrics_handler.update('pihole_client_queries', client_data)
 
     def generate_latest(self):
         self.get_summary()
@@ -110,17 +110,16 @@ class pihole_exporter(exporter):
         top_sources = self.get_json(self.top_sources_url)
         if top_sources:
             self.metrics_handler.update('pihole_top_sources',
-                                            top_sources['top_sources'])
+                                        top_sources['top_sources'])
 
         fw_dest = self.get_json(self.forward_destinations_url)
         if fw_dest:
             self.metrics_handler.update('pihole_forward_destinations',
-                                            fw_dest['forward_destinations'])
+                                        fw_dest['forward_destinations'])
 
         qt = self.get_json(self.query_types_url)
         if qt:
-            self.metrics_handler.update('pihole_query_type',
-                                            qt['querytypes'])
+            self.metrics_handler.update('pihole_query_type', qt['querytypes'])
 
         if self.extended:
             self.get_exteneded_metrics()

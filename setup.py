@@ -14,7 +14,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='pihole_exporter',
-    version='0.4.6.5',
+    version='0.4.6.6',
     url='https://github.com/dr1s/pihole_exporter.py',
     author='dr1s',
     author_email='dr1s@drs.li',
